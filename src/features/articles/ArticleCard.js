@@ -1,0 +1,43 @@
+import { Link } from 'react-router-dom';
+import { articleUrl } from '../../config';
+import { articleCategory, articleTitle } from '../../utils/article';
+import { formatRelativeDate } from '../../utils/format';
+
+export default function ArticleCard({ article, variant = 'default' }) {
+  const title = articleTitle(article);
+  const category = articleCategory(article);
+  const excerpt = article.meta_description;
+  const date = article.source?.published_at || article.generated_at;
+
+  return (
+    <article className={`story-card story-card--${variant}`}>
+      <Link to={articleUrl(article.slug)} className="story-card__link">
+        {article.featured_image_url && (
+          <div className="story-card__media">
+            <img
+              src={article.featured_image_url}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              width={variant === 'wide' ? 800 : 400}
+              height={variant === 'wide' ? 450 : 225}
+            />
+          </div>
+        )}
+        <div className="story-card__body">
+          <span className="story-card__category">{category}</span>
+          <h2 className="story-card__title">{title}</h2>
+          <p className="story-card__dek">{excerpt}</p>
+          <footer className="story-card__meta">
+            <time dateTime={date}>{formatRelativeDate(date)}</time>
+            {article.read_time_minutes && (
+              <span className="story-card__read-time">
+                {article.read_time_minutes} min read
+              </span>
+            )}
+          </footer>
+        </div>
+      </Link>
+    </article>
+  );
+}

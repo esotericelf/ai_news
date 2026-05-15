@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AI News Digest">
+  <rect width="512" height="512" fill="#000"/>
+  <path
+    d="M256 72 L416 392 L96 392 Z"
+    fill="none"
+    stroke="#e31937"
+    stroke-width="26"
+    stroke-linejoin="round"
+  />
+  <circle cx="256" cy="298" r="38" fill="#e31937"/>
+</svg>
