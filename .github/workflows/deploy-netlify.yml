@@ -1,0 +1,46 @@
+# Deploy static build to Netlify on push to main.
+#
+# One-time setup (see DEPLOY_NETLIFY.md):
+#   GitHub repo → Settings → Secrets and variables → Actions
+#   Add: NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID, and REACT_APP_* build variables.
+
+name: Deploy to Netlify
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        env:
+          # Must be a public HTTPS URL (not Docker Desktop localhost)
+          REACT_APP_API_BASE_URL: ${{ secrets.REACT_APP_API_BASE_URL }}
+          REACT_APP_SITE_URL: ${{ secrets.REACT_APP_SITE_URL }}
+          REACT_APP_API_KEY: ${{ secrets.REACT_APP_API_KEY }}
+          REACT_APP_SITE_NAME: ${{ secrets.REACT_APP_SITE_NAME }}
+          REACT_APP_SITE_DESCRIPTION: ${{ secrets.REACT_APP_SITE_DESCRIPTION }}
+          NODE_ENV: production
+          CI: 'true'
+        run: npm run build
+
+      - name: Deploy to Netlify
+        uses: netlify/actions/cli@master
+        with:
+          args: deploy --prod --dir=build
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

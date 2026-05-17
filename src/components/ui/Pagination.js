@@ -17,22 +17,18 @@ export default function Pagination({ currentPage, hasNext, hasPrevious, totalCou
   return (
     <nav className="pagination" aria-label="Article pages">
       {hasPrevious ? (
-        <Link to={buildLink(currentPage - 1)} className="btn btn--ghost" rel="prev">
+        <Link to={buildLink(currentPage - 1)} className="btn btn--ghost pagination__prev" rel="prev">
           ← Newer
         </Link>
-      ) : (
-        <span />
-      )}
+      ) : null}
       {totalCount != null && (
         <span className="pagination__meta">{totalCount} articles</span>
       )}
       {hasNext ? (
-        <Link to={buildLink(currentPage + 1)} className="btn btn--ghost" rel="next">
+        <Link to={buildLink(currentPage + 1)} className="btn btn--ghost pagination__next" rel="next">
           Older →
         </Link>
-      ) : (
-        <span />
-      )}
+      ) : null}
     </nav>
   );
 }

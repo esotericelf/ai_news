@@ -11,8 +11,14 @@ const siteUrl = (process.env.REACT_APP_SITE_URL || 'http://localhost:3000').repl
   ''
 );
 
+const devProxyTarget = (
+  process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'
+).replace(/\/$/, '');
+
 export const config = {
   apiBase,
+  useDevProxy,
+  devProxyTarget,
   siteUrl,
   apiKey: process.env.REACT_APP_API_KEY || '',
   siteName: process.env.REACT_APP_SITE_NAME || 'AI News Digest',
