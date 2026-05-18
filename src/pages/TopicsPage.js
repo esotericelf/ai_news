@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Breadcrumbs from '../components/ui/Breadcrumbs';
 import ErrorState from '../components/ui/ErrorState';
 import SeoHead from '../seo/SeoHead';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -42,6 +43,12 @@ export default function TopicsPage() {
       />
 
       <div className="page page--topics">
+        <Breadcrumbs
+          items={[
+            { label: 'Home', to: '/' },
+            { label: 'Browse topics' },
+          ]}
+        />
         <header className="page-masthead page-masthead--compact">
           <h1 className="page-masthead__title">Browse topics</h1>
           <p className="page-masthead__dek">

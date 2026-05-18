@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import Breadcrumbs from '../components/ui/Breadcrumbs';
 import ErrorState from '../components/ui/ErrorState';
 import Tag from '../components/ui/Tag';
 import ArticleBody from '../features/articles/ArticleBody';
@@ -83,14 +84,7 @@ export default function ArticlePage() {
       <JsonLd data={jsonLd} />
 
       <article className="page page--article" itemScope itemType="https://schema.org/NewsArticle">
-        <nav className="breadcrumb" aria-label="Breadcrumb">
-          <ol>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li aria-current="page">{title}</li>
-          </ol>
-        </nav>
+        <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: title }]} />
 
         <header className="article-header">
           <span className="article-eyebrow">{category}</span>

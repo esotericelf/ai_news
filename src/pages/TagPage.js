@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
+import Breadcrumbs from '../components/ui/Breadcrumbs';
 import ErrorState from '../components/ui/ErrorState';
 import Pagination from '../components/ui/Pagination';
 import ArticleList from '../features/articles/ArticleList';
@@ -60,10 +61,14 @@ export default function TagPage() {
       />
 
       <div className="page page--tag">
+        <Breadcrumbs
+          items={[
+            { label: 'Home', to: '/' },
+            { label: 'Topics', to: '/topics' },
+            { label: title },
+          ]}
+        />
         <header className="page-masthead page-masthead--compact">
-          <p className="breadcrumb">
-            <Link to="/topics">Topics</Link>
-          </p>
           <h1 className="page-masthead__title">{title}</h1>
           {tagMeta.article_count != null && (
             <p className="page-masthead__dek">{tagMeta.article_count} articles</p>

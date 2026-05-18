@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import Breadcrumbs from '../components/ui/Breadcrumbs';
 import ErrorState from '../components/ui/ErrorState';
 import Pagination from '../components/ui/Pagination';
 import SectionHeader from '../components/ui/SectionHeader';
@@ -61,6 +62,22 @@ export default function CategoryPage() {
   const ready = list.filter((a) => a.status === 'ready');
   const pageTitle = parentLabel ? `${title} · ${parentLabel}` : title;
 
+  const breadcrumbItems = [
+    { label: 'Home', to: '/' },
+    { label: 'Topics', to: '/topics' },
+  ];
+  if (l1 && l2) {
+    breadcrumbItems.push({
+      label: l1.nav_label || l1.title,
+      to: categoryUrl(l1Slug),
+    });
+    breadcrumbItems.push({ label: title });
+  } else if (l1 || l1Slug) {
+    breadcrumbItems.push({ label: title || l1Slug });
+  } else {
+    breadcrumbItems.push({ label: title || 'Category' });
+  }
+
   return (
     <>
       <SeoHead
@@ -71,12 +88,8 @@ export default function CategoryPage() {
       />
 
       <div className="page page--category">
+        <Breadcrumbs items={breadcrumbItems} />
         <header className="page-masthead page-masthead--compact">
-          {parentLabel && (
-            <p className="breadcrumb">
-              <Link to={categoryUrl(l1Slug)}>{parentLabel}</Link>
-            </p>
-          )}
           <h1 className="page-masthead__title">{title || 'Category'}</h1>
           {l1 && !l2 && l1.subcategories?.length > 0 && (
             <nav className="category-chips" aria-label="Subtopics">

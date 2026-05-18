@@ -7,9 +7,10 @@ import { loadTaxonomy } from '../../store/slices/taxonomySlice';
 export default function TaxonomyNav() {
   const dispatch = useAppDispatch();
   const location = useLocation();
-  const { tree, status } = useAppSelector((state) => state.taxonomy);
+  const { tree, status, error } = useAppSelector((state) => state.taxonomy);
   const [openSlug, setOpenSlug] = useState(null);
   const navRef = useRef(null);
+  const categories = tree?.categories ?? [];
 
   useEffect(() => {
     if (status === 'idle') {
@@ -31,14 +32,20 @@ export default function TaxonomyNav() {
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, []);
 
-  if (status !== 'succeeded' || !tree?.categories?.length) {
-    return null;
-  }
-
   return (
     <nav className="taxonomy-nav" aria-label="Topics by category" ref={navRef}>
+      {status === 'loading' && (
+        <p className="taxonomy-nav__status" aria-live="polite">
+          Loading topics…
+        </p>
+      )}
+      {status === 'failed' && (
+        <p className="taxonomy-nav__status taxonomy-nav__status--error" role="status">
+          Categories unavailable — use Browse topics or check the API connection.
+        </p>
+      )}
       <ul className="taxonomy-nav__list">
-        {tree.categories.map((l1) => {
+        {categories.map((l1) => {
           const isOpen = openSlug === l1.slug;
           const hasSubs = l1.subcategories?.length > 0;
           return (
@@ -95,6 +102,9 @@ export default function TaxonomyNav() {
           </Link>
         </li>
       </ul>
+      {status === 'failed' && error && (
+        <span className="visually-hidden">{error}</span>
+      )}
     </nav>
   );
 }

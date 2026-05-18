@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ErrorState from '../components/ui/ErrorState';
 import Pagination from '../components/ui/Pagination';
 import SectionHeader from '../components/ui/SectionHeader';
@@ -65,6 +65,12 @@ export default function HomePage() {
             <SectionHeader title={`Results for “${search}”`} />
           </header>
         )}
+
+        <nav className="home-topics-cta" aria-label="Topic navigation">
+          <Link to="/topics" className="home-topics-cta__link">
+            Browse topics by category →
+          </Link>
+        </nav>
 
         <TrendingTags />
 
