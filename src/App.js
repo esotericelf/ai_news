@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import TagPage from './pages/TagPage';
 import TopicsPage from './pages/TopicsPage';
+import EditorPage from './pages/EditorPage';
 import { store } from './store';
 import { config } from './config';
 
@@ -17,6 +18,7 @@ export default function App() {
       <HelmetProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="editor" element={<EditorPage />} />
             <Route element={<AppLayout />}>
               <Route index element={<HomePage />} />
               <Route path="topics" element={<TopicsPage />} />

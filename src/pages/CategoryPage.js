@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticles } from '../store/slices/articlesSlice';
 import { loadTaxonomy } from '../store/slices/taxonomySlice';
 import { config, categoryUrl } from '../config';
+import { filterDisplayableArticles } from '../utils/article';
 import { findL1, findL2 } from '../utils/taxonomy';
 
 export default function CategoryPage() {
@@ -59,7 +60,7 @@ export default function CategoryPage() {
         })}`
       : `${config.siteUrl}${canonicalPath}`;
 
-  const ready = list.filter((a) => a.status === 'ready');
+  const ready = filterDisplayableArticles(list.filter((a) => a.status === 'ready'));
   const pageTitle = parentLabel ? `${title} · ${parentLabel}` : title;
 
   const breadcrumbItems = [
