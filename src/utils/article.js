@@ -1,3 +1,5 @@
+export { resolveArticleImageUrl } from './image';
+
 export function articleCategory(article) {
   const kw = article?.target_keywords?.[0];
   if (kw) return kw;

@@ -7,7 +7,7 @@ import { loadTaxonomy } from '../../store/slices/taxonomySlice';
 export default function TaxonomyNav() {
   const dispatch = useAppDispatch();
   const location = useLocation();
-  const { tree, status, error } = useAppSelector((state) => state.taxonomy);
+  const { tree, status, error, fromFallback } = useAppSelector((state) => state.taxonomy);
   const [openSlug, setOpenSlug] = useState(null);
   const navRef = useRef(null);
   const categories = tree?.categories ?? [];
@@ -41,7 +41,12 @@ export default function TaxonomyNav() {
       )}
       {status === 'failed' && (
         <p className="taxonomy-nav__status taxonomy-nav__status--error" role="status">
-          Categories unavailable — use Browse topics or check the API connection.
+          Could not load categories — check API connection and restart npm start.
+        </p>
+      )}
+      {status === 'succeeded' && fromFallback && (
+        <p className="taxonomy-nav__status taxonomy-nav__status--warn" role="status">
+          Using built-in categories (update backend for live taxonomy and tag counts).
         </p>
       )}
       <ul className="taxonomy-nav__list">

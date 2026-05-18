@@ -1,8 +1,9 @@
 import { absoluteArticleUrl, config } from '../config';
+import { resolveArticleImageUrl } from './image';
 
 export function buildArticleJsonLd(article) {
   const url = absoluteArticleUrl(article.slug);
-  const image = article.featured_image_url || undefined;
+  const image = resolveArticleImageUrl(article) || undefined;
   const datePublished =
     article.source?.published_at || article.generated_at || undefined;
   const dateModified = article.updated_at || article.generated_at || undefined;

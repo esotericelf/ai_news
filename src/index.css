@@ -465,6 +465,11 @@ h4 {
   background: #fff5f6;
 }
 
+.taxonomy-nav__status--warn {
+  color: #6b5a00;
+  background: #fffbe6;
+}
+
 .home-topics-cta {
   margin-bottom: var(--space-lg);
   padding: var(--space-md) var(--space-lg);

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import ArticleImage from '../components/ui/ArticleImage';
 import Breadcrumbs from '../components/ui/Breadcrumbs';
 import ErrorState from '../components/ui/ErrorState';
 import Tag from '../components/ui/Tag';
@@ -12,7 +13,7 @@ import { absoluteArticleUrl, config } from '../config';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticleBySlug, loadArticles } from '../store/slices/articlesSlice';
 import { buildArticleJsonLd, buildBreadcrumbJsonLd } from '../utils/seo';
-import { articleCategory, articleTitle } from '../utils/article';
+import { articleCategory, articleTitle, resolveArticleImageUrl } from '../utils/article';
 
 export default function ArticlePage() {
   const { slug } = useParams();
@@ -62,6 +63,7 @@ export default function ArticlePage() {
   const category = articleCategory(article);
   const canonical = absoluteArticleUrl(article.slug);
   const keywords = article.target_keywords || [];
+  const imageUrl = resolveArticleImageUrl(article);
 
   const jsonLd = [
     buildArticleJsonLd(article),
@@ -77,7 +79,7 @@ export default function ArticlePage() {
         title={title}
         description={article.meta_description}
         canonical={canonical}
-        image={article.featured_image_url}
+        image={imageUrl}
         type="article"
         keywords={keywords}
       />
@@ -101,18 +103,15 @@ export default function ArticlePage() {
           )}
         </header>
 
-        {article.featured_image_url && (
-          <figure className="article-figure">
-            <img
-              src={article.featured_image_url}
-              alt=""
-              itemProp="image"
-              width={1200}
-              height={630}
-              fetchPriority="high"
-            />
-          </figure>
-        )}
+        <figure className="article-figure">
+          <ArticleImage
+            article={article}
+            itemProp="image"
+            width={1200}
+            height={630}
+            fetchPriority="high"
+          />
+        </figure>
 
         <ArticleBody html={article.body_html} />
 

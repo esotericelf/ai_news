@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { articleUrl } from '../../config';
+import ArticleImage from '../../components/ui/ArticleImage';
 import { articleCategory, articleTitle } from '../../utils/article';
 import { formatDate } from '../../utils/format';
 
@@ -9,21 +10,12 @@ export default function ArticleHero({ article }) {
   const title = articleTitle(article);
   const category = articleCategory(article);
   const date = article.source?.published_at || article.generated_at;
-
   return (
     <section className="lead-story" aria-labelledby="featured-article-title">
       <Link to={articleUrl(article.slug)} className="lead-story__link">
-        {article.featured_image_url && (
-          <div className="lead-story__media">
-            <img
-              src={article.featured_image_url}
-              alt=""
-              fetchPriority="high"
-              width={1400}
-              height={787}
-            />
-          </div>
-        )}
+        <div className="lead-story__media">
+          <ArticleImage article={article} fetchPriority="high" width={1400} height={787} />
+        </div>
         <div className="lead-story__content">
           <span className="lead-story__category">{category}</span>
           <h2 id="featured-article-title" className="lead-story__title">
