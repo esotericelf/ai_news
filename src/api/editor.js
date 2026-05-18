@@ -1,5 +1,3 @@
-import { apiGet } from './client';
-
 function editorHeaders() {
   const key =
     process.env.REACT_APP_EDITOR_API_KEY ||
