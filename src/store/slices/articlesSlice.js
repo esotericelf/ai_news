@@ -3,12 +3,18 @@ import { fetchPublishedBySlug, fetchPublishedList } from '../../api/published';
 
 export const loadArticles = createAsyncThunk(
   'articles/loadList',
-  async ({ page = 1, search = '' } = {}, { rejectWithValue }) => {
+  async (
+    { page = 1, search = '', category_l1, category_l2, tag } = {},
+    { rejectWithValue }
+  ) => {
     try {
       return await fetchPublishedList({
         page,
         search,
         ordering: '-generated_at',
+        category_l1,
+        category_l2,
+        tag,
       });
     } catch (err) {
       return rejectWithValue(err.message || 'Failed to load articles');

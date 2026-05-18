@@ -1,15 +1,25 @@
 import { Link, useSearchParams } from 'react-router-dom';
 
-export default function Pagination({ currentPage, hasNext, hasPrevious, totalCount }) {
+export default function Pagination({
+  currentPage,
+  hasNext,
+  hasPrevious,
+  totalCount,
+  basePath = '/',
+  extraParams = {},
+}) {
   const [searchParams] = useSearchParams();
-  const search = searchParams.get('search') || '';
+  const search = searchParams.get('search') || extraParams.search || '';
 
   const buildLink = (page) => {
     const params = new URLSearchParams();
     if (page > 1) params.set('page', String(page));
     if (search) params.set('search', search);
+    Object.entries(extraParams).forEach(([key, value]) => {
+      if (key !== 'search' && value) params.set(key, value);
+    });
     const qs = params.toString();
-    return qs ? `/?${qs}` : '/';
+    return qs ? `${basePath}?${qs}` : basePath;
   };
 
   if (!hasNext && !hasPrevious) return null;

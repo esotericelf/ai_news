@@ -15,6 +15,7 @@ export default function Footer() {
         </p>
         <nav className="site-footer__nav" aria-label="Footer">
           <Link to="/">Home</Link>
+          <Link to="/topics">Topics</Link>
           <a href="/sitemap.xml">Sitemap</a>
         </nav>
       </div>

@@ -36,3 +36,11 @@ export function articleUrl(slug) {
 export function absoluteArticleUrl(slug) {
   return `${config.siteUrl}${articleUrl(slug)}`;
 }
+
+export function categoryUrl(l1Slug, l2Slug) {
+  return l2Slug ? `/category/${l1Slug}/${l2Slug}` : `/category/${l1Slug}`;
+}
+
+export function tagUrl(slug) {
+  return `/tags/${slug}`;
+}

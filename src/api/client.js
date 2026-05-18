@@ -32,7 +32,7 @@ export async function apiGet(path, params = {}) {
         ? `Dev proxy targets ${apiTarget}. `
         : `Requests go to ${apiTarget}. `) +
       'For local Docker: run docker compose up in AI_News_Scraper and check http://localhost:8000/health/. ' +
-      'For ngrok: set REACT_APP_API_BASE_URL in .env.local to your https://….ngrok-free.app URL, ' +
+      'For ngrok: set REACT_APP_API_BASE_URL in .env.local to your active https://….ngrok-free.app or .ngrok-free.dev URL, ' +
       'set REACT_APP_USE_DEV_PROXY=false (or keep true to proxy through npm), restart npm start. ' +
       'REACT_APP_API_KEY must match backend API_KEY. See AI_News_Scraper/docs/NGROK.md.';
     throw new Error(err.message === 'Failed to fetch' ? hint : err.message);

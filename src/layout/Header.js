@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom';
+import TaxonomyNav from '../features/navigation/TaxonomyNav';
 import { config } from '../config';
 
 export default function Header() {
@@ -32,6 +33,7 @@ export default function Header() {
           </button>
         </form>
       </div>
+      <TaxonomyNav />
     </header>
   );
 }

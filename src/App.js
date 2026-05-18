@@ -3,8 +3,11 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import AppLayout from './layout/AppLayout';
 import ArticlePage from './pages/ArticlePage';
+import CategoryPage from './pages/CategoryPage';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
+import TagPage from './pages/TagPage';
+import TopicsPage from './pages/TopicsPage';
 import { store } from './store';
 import { config } from './config';
 
@@ -16,6 +19,10 @@ export default function App() {
           <Routes>
             <Route element={<AppLayout />}>
               <Route index element={<HomePage />} />
+              <Route path="topics" element={<TopicsPage />} />
+              <Route path="category/:l1" element={<CategoryPage />} />
+              <Route path="category/:l1/:l2" element={<CategoryPage />} />
+              <Route path="tags/:slug" element={<TagPage />} />
               <Route path={`${config.articlePath}/:slug`} element={<ArticlePage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
