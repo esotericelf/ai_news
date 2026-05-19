@@ -23,8 +23,10 @@ function useMediaQuery(query) {
   return matches;
 }
 
-function CategoryPanel({ l1, panelId, className = '', onMouseEnter }) {
+function CategoryPanel({ l1, panelId, className = '', onMouseEnter, onClose }) {
   const label = l1.nav_label || l1.title;
+  const isMobilePanel = className.includes('taxonomy-nav__panel--mobile');
+
   return (
     <div
       id={panelId}
@@ -33,16 +35,37 @@ function CategoryPanel({ l1, panelId, className = '', onMouseEnter }) {
       aria-label={`${label} subcategories`}
       onMouseEnter={onMouseEnter}
     >
-      <p className="taxonomy-nav__panel-title">{l1.title}</p>
+      <div className="taxonomy-nav__panel-head">
+        <p className="taxonomy-nav__panel-title">{l1.title}</p>
+        {isMobilePanel && onClose && (
+          <button
+            type="button"
+            className="taxonomy-nav__close"
+            onClick={onClose}
+            aria-label="Close menu"
+          >
+            Close
+          </button>
+        )}
+      </div>
       <ul className="taxonomy-nav__subs">
         <li>
-          <Link to={categoryUrl(l1.slug)} className="taxonomy-nav__all">
+          <Link
+            to={categoryUrl(l1.slug)}
+            className="taxonomy-nav__all"
+            onClick={isMobilePanel ? onClose : undefined}
+          >
             All in {label}
           </Link>
         </li>
         {l1.subcategories.map((l2) => (
           <li key={l2.slug}>
-            <Link to={categoryUrl(l1.slug, l2.slug)}>{l2.nav_label || l2.title}</Link>
+            <Link
+              to={categoryUrl(l1.slug, l2.slug)}
+              onClick={isMobilePanel ? onClose : undefined}
+            >
+              {l2.nav_label || l2.title}
+            </Link>
           </li>
         ))}
       </ul>
@@ -73,6 +96,12 @@ export default function TaxonomyNav() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!isMobile || !openSlug || !navRef.current) return;
+    const openItem = navRef.current.querySelector('.taxonomy-nav__item--open');
+    openItem?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+  }, [isMobile, openSlug]);
+
+  useEffect(() => {
     const onPointerDown = (e) => {
       if (navRef.current && !navRef.current.contains(e.target)) {
         setOpenSlug(null);
@@ -91,7 +120,11 @@ export default function TaxonomyNav() {
   };
 
   return (
-    <nav className="taxonomy-nav" aria-label="Topics by category" ref={navRef}>
+    <nav
+      className={`taxonomy-nav${openSlug ? ' taxonomy-nav--open' : ''}`}
+      aria-label="Topics by category"
+      ref={navRef}
+    >
       {status === 'loading' && (
         <p className="taxonomy-nav__status" aria-live="polite">
           Loading topics…
@@ -173,6 +206,7 @@ export default function TaxonomyNav() {
           l1={openCategory}
           panelId={`taxonomy-panel-${openCategory.slug}`}
           className="taxonomy-nav__panel--mobile"
+          onClose={() => setOpenSlug(null)}
         />
       )}
       {status === 'failed' && error && (
