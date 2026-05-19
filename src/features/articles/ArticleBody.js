@@ -13,8 +13,10 @@ const PURIFY_CONFIG = {
     'strong',
     'em',
     'blockquote',
+    'pre',
+    'code',
   ],
-  ALLOWED_ATTR: ['href', 'rel', 'target'],
+  ALLOWED_ATTR: ['href', 'rel', 'target', 'class'],
 };
 
 const BOILERPLATE_RE =

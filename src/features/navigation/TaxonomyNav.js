@@ -60,6 +60,7 @@ export default function TaxonomyNav() {
   const hoverCapable = useMediaQuery(HOVER_MQ);
   const categories = tree?.categories ?? [];
   const openCategory = categories.find((c) => c.slug === openSlug) ?? null;
+  const onHome = location.pathname === '/';
 
   useEffect(() => {
     if (status === 'idle') {
@@ -108,6 +109,13 @@ export default function TaxonomyNav() {
       )}
       <div className="taxonomy-nav__bar">
         <ul className="taxonomy-nav__list">
+          {!onHome && (
+            <li className="taxonomy-nav__item taxonomy-nav__item--home">
+              <Link to="/" className="taxonomy-nav__l1 taxonomy-nav__l1--home">
+                Home
+              </Link>
+            </li>
+          )}
           {categories.map((l1) => {
             const isOpen = openSlug === l1.slug;
             const hasSubs = l1.subcategories?.length > 0;

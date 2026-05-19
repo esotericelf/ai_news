@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
+import GoogleAnalytics from './components/analytics/GoogleAnalytics';
 import AppLayout from './layout/AppLayout';
 import ArticlePage from './pages/ArticlePage';
 import CategoryPage from './pages/CategoryPage';
@@ -17,6 +18,7 @@ export default function App() {
     <Provider store={store}>
       <HelmetProvider>
         <BrowserRouter>
+          <GoogleAnalytics />
           <Routes>
             <Route path="editor" element={<EditorPage />} />
             <Route element={<AppLayout />}>

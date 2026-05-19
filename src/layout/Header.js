@@ -13,7 +13,12 @@ export default function Header() {
         <span className="site-header__edition">Technology · Science · AI</span>
       </div>
       <div className="site-header__main">
-        <Link to="/" className="site-logo" aria-label={`${config.siteName} home`}>
+        <Link
+          to="/"
+          className="site-logo"
+          aria-label={`${config.siteName} — back to home`}
+          title="Back to home"
+        >
           {masthead}
         </Link>
         <form className="site-search" action="/" method="get" role="search">

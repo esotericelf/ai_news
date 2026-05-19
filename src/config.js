@@ -25,6 +25,7 @@ export const config = {
   siteDescription:
     process.env.REACT_APP_SITE_DESCRIPTION ||
     'Curated artificial intelligence and technology news, optimized for clarity and discovery.',
+  gaMeasurementId: process.env.REACT_APP_GA_MEASUREMENT_ID || 'G-TCT20QCCWS',
   articlesPerPage: 12,
   articlePath: '/news',
 };

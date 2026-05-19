@@ -142,6 +142,8 @@ h4 {
 }
 
 .site-logo {
+  position: relative;
+  z-index: 120;
   font-family: var(--font-sans);
   font-size: clamp(1.75rem, 4vw, 2.25rem);
   font-weight: 800;
@@ -149,11 +151,17 @@ h4 {
   color: var(--text);
   text-decoration: none;
   line-height: 1;
+  cursor: pointer;
 }
 
 .site-logo:hover {
   color: var(--accent);
   text-decoration: none;
+}
+
+.site-logo:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .site-search {
@@ -255,6 +263,10 @@ h4 {
 }
 
 .taxonomy-nav__l1--accent {
+  color: var(--accent);
+}
+
+.taxonomy-nav__l1--home {
   color: var(--accent);
 }
 
@@ -941,6 +953,57 @@ h4 {
 
 .article-body.prose p {
   margin: 0 0 1.35rem;
+}
+
+.article-body.prose h2 {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 2rem 0 0.85rem;
+  line-height: 1.25;
+}
+
+.article-body.prose h2:first-child {
+  margin-top: 0;
+}
+
+/* Code blocks — Stack Overflow–style */
+.article-body.prose pre {
+  margin: 0 0 1.35rem;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  font-family: var(--font-mono, ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #242729;
+  background: #f6f8f9;
+  border: 1px solid #e3e6e8;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.article-body.prose pre code {
+  display: block;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.article-body.prose :not(pre) > code {
+  padding: 0.15em 0.4em;
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 0.88em;
+  color: #2f3337;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .article-body.prose a {
