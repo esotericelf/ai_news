@@ -106,13 +106,16 @@ export default function EditorPage() {
     };
   }, [selectedId, apiKey]);
 
+  const revisionStatus = detail?.revision_status;
+  const detailId = detail?.id;
+
   useEffect(() => {
-    if (!detail || !REVISION_ACTIVE.has(detail.revision_status)) return undefined;
+    if (!detailId || !REVISION_ACTIVE.has(revisionStatus)) return undefined;
     const timer = setInterval(() => {
       refreshDetail().catch(() => {});
     }, 2500);
     return () => clearInterval(timer);
-  }, [detail?.revision_status, detail?.id, refreshDetail]);
+  }, [revisionStatus, detailId, refreshDetail]);
 
   const onApprove = async () => {
     if (!selectedId) return;
