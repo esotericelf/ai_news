@@ -8,7 +8,7 @@ module.exports = function setupProxy(app) {
   const apiKey = (process.env.REACT_APP_API_KEY || '').trim();
 
   app.use(
-    ['/api', '/health'],
+    ['/api', '/health', '/robots.txt', '/sitemap.xml'],
     createProxyMiddleware({
       target,
       changeOrigin: true,

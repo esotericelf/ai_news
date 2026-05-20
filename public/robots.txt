@@ -1,6 +1,0 @@
-# https://www.robotstxt.org/robotstxt.html
-User-agent: *
-Allow: /
-
-# Set REACT_APP_SITE_URL in Netlify and replace below, or add sitemap at deploy time
-Sitemap: /sitemap.xml

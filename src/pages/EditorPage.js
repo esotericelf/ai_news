@@ -7,10 +7,28 @@ import {
   fetchDrafts,
   fetchEditorStats,
   rejectDraft,
+  reviseDraft,
 } from '../api/editor';
 import { articleUrl } from '../config';
 
 const STORAGE_KEY = 'ai_news_editor_key';
+
+const REVISION_ACTIVE = new Set(['queued', 'processing']);
+
+function revisionLabel(status) {
+  switch (status) {
+    case 'processing':
+      return 'Llama is revising this article…';
+    case 'queued':
+      return 'Queued for revision…';
+    case 'completed':
+      return 'Revision complete — review the updated body below.';
+    case 'failed':
+      return 'Revision failed';
+    default:
+      return '';
+  }
+}
 
 export default function EditorPage() {
   const [apiKey, setApiKey] = useState(() => sessionStorage.getItem(STORAGE_KEY) || '');
@@ -22,11 +40,20 @@ export default function EditorPage() {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [actionMsg, setActionMsg] = useState('');
+  const [revisionComment, setRevisionComment] = useState('');
+  const [showPreviousBody, setShowPreviousBody] = useState(false);
+  const [reviseBusy, setReviseBusy] = useState(false);
 
   const saveKey = () => {
     sessionStorage.setItem(STORAGE_KEY, keyInput.trim());
     setApiKey(keyInput.trim());
     window.location.reload();
+  };
+
+  const clearKey = () => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    setApiKey('');
+    setKeyInput('');
   };
 
   const loadQueue = useCallback(async () => {
@@ -44,6 +71,13 @@ export default function EditorPage() {
     }
   }, [apiKey]);
 
+  const refreshDetail = useCallback(async () => {
+    if (!selectedId || !apiKey) return null;
+    const d = await fetchDraft(selectedId);
+    setDetail(d);
+    return d;
+  }, [selectedId, apiKey]);
+
   useEffect(() => {
     loadQueue();
   }, [loadQueue]);
@@ -51,13 +85,18 @@ export default function EditorPage() {
   useEffect(() => {
     if (!selectedId || !apiKey) {
       setDetail(null);
+      setRevisionComment('');
+      setShowPreviousBody(false);
       return;
     }
     let cancelled = false;
     (async () => {
       try {
         const d = await fetchDraft(selectedId);
-        if (!cancelled) setDetail(d);
+        if (!cancelled) {
+          setDetail(d);
+          setRevisionComment(d.editor_comment || '');
+        }
       } catch (e) {
         if (!cancelled) setError(e.detail || e.message);
       }
@@ -67,12 +106,27 @@ export default function EditorPage() {
     };
   }, [selectedId, apiKey]);
 
+  useEffect(() => {
+    if (!detail || !REVISION_ACTIVE.has(detail.revision_status)) return undefined;
+    const timer = setInterval(() => {
+      refreshDetail().catch(() => {});
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [detail?.revision_status, detail?.id, refreshDetail]);
+
   const onApprove = async () => {
     if (!selectedId) return;
+    if (
+      !window.confirm(
+        'Approve this article? It will be marked Reviewed and published on the public site.'
+      )
+    ) {
+      return;
+    }
     setActionMsg('');
     try {
       const res = await approveDraft(selectedId);
-      setActionMsg(`Published: ${res.slug}`);
+      setActionMsg(`Approved · live at ${articleUrl(res.slug)}`);
       setSelectedId(null);
       setDetail(null);
       loadQueue();
@@ -96,30 +150,52 @@ export default function EditorPage() {
     }
   };
 
+  const onRevise = async () => {
+    if (!selectedId) return;
+    const comment = revisionComment.trim();
+    if (comment.length < 8) {
+      setActionMsg('Enter revision instructions (at least 8 characters).');
+      return;
+    }
+    setReviseBusy(true);
+    setActionMsg('');
+    try {
+      await reviseDraft(selectedId, comment);
+      setActionMsg('Revision queued — Llama is updating the article…');
+      setShowPreviousBody(false);
+      await refreshDetail();
+      loadQueue();
+    } catch (e) {
+      setActionMsg(e.detail || e.message);
+    } finally {
+      setReviseBusy(false);
+    }
+  };
+
   if (!apiKey) {
     return (
       <div className="editor-page">
         <div className="editor-auth">
-          <h1>Editor — approval queue</h1>
+          <h1>Editor — admin login</h1>
           <p>
-            Enter your <code>EDITOR_API_KEY</code> (or <code>API_KEY</code>) from the Django{' '}
-            <code>.env</code>. This is stored in your browser session only.
+            Sign in with your <code>EDITOR_API_KEY</code> (or <code>API_KEY</code>) from{' '}
+            <code>AI_News_Scraper/.env</code>. Stored in this browser session only.
           </p>
           <div className="editor-auth__row">
             <input
               type="password"
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}
-              placeholder="X-Api-Key value"
+              placeholder="Admin API key"
               autoComplete="off"
             />
             <button type="button" onClick={saveKey}>
-              Unlock
+              Sign in
             </button>
           </div>
           <p className="editor-auth__hint">
-            No email workflow — review drafts here and click Publish. Llama writes multi-section
-            SEO reviews; only approved articles appear on the public site.
+            Review drafts: <strong>Approve</strong> marks them reviewed and publishes, or send{' '}
+            <strong>revision notes</strong> to Llama and preview changes here before approving.
           </p>
           <Link to="/">← Back to site</Link>
         </div>
@@ -127,20 +203,29 @@ export default function EditorPage() {
     );
   }
 
+  const revisionActive = detail && REVISION_ACTIVE.has(detail.revision_status);
+  const canApprove =
+    detail && !revisionActive && detail.revision_status !== 'processing';
+
   return (
     <div className="editor-page">
       <header className="editor-header">
         <div>
-          <h1>Approval queue</h1>
+          <h1>Editor — review queue</h1>
           {stats && (
             <p className="editor-header__stats">
-              {stats.draft} awaiting · {stats.published} live · {stats.failed} failed
+              {stats.pending_review ?? stats.draft} awaiting review
+              {stats.revising ? ` · ${stats.revising} revising` : ''} · {stats.published} live ·{' '}
+              {stats.failed} failed
             </p>
           )}
         </div>
         <div className="editor-header__actions">
           <button type="button" className="btn btn--ghost" onClick={loadQueue}>
             Refresh
+          </button>
+          <button type="button" className="btn btn--ghost" onClick={clearKey}>
+            Sign out
           </button>
           <Link to="/" className="btn btn--ghost">
             Public site
@@ -156,7 +241,10 @@ export default function EditorPage() {
           <h2>Drafts</h2>
           {status === 'loading' && <p>Loading…</p>}
           {!drafts.length && status === 'ready' && (
-            <p className="editor-empty">No drafts waiting. Run regenerate on the server.</p>
+            <p className="editor-empty">
+              No drafts waiting. Set <code>SEO_REQUIRE_APPROVAL=1</code> on the API so new articles
+              enter this queue.
+            </p>
           )}
           <ul>
             {drafts.map((d) => (
@@ -168,7 +256,12 @@ export default function EditorPage() {
                 >
                   <span className="editor-queue__title">{d.seo_title || d.source_title}</span>
                   <span className="editor-queue__meta">
-                    {d.read_time_minutes} min · {d.llm_model || 'fallback'}
+                    {d.reviewed ? 'Reviewed' : 'Not reviewed'}
+                    {d.revision_status && d.revision_status !== 'idle'
+                      ? ` · ${d.revision_status}`
+                      : ''}
+                    {' · '}
+                    {d.read_time_minutes} min
                   </span>
                 </button>
               </li>
@@ -177,22 +270,90 @@ export default function EditorPage() {
         </aside>
 
         <main className="editor-preview">
-          {!detail && <p className="editor-empty">Select a draft to preview.</p>}
+          {!detail && <p className="editor-empty">Select a draft to review.</p>}
           {detail && (
             <>
+              {detail.revision_status && detail.revision_status !== 'idle' && (
+                <div
+                  className={`editor-revision-banner editor-revision-banner--${detail.revision_status}`}
+                  role="status"
+                >
+                  <strong>{revisionLabel(detail.revision_status)}</strong>
+                  {detail.revision_note && <p>{detail.revision_note}</p>}
+                  {revisionActive && <p className="editor-revision-banner__poll">Checking for updates…</p>}
+                </div>
+              )}
+
               <div className="editor-preview__actions">
-                <button type="button" className="btn btn--primary" onClick={onApprove}>
-                  Publish
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={onApprove}
+                  disabled={!canApprove}
+                  title={
+                    !canApprove
+                      ? 'Wait until revision finishes before approving'
+                      : 'Mark reviewed and publish'
+                  }
+                >
+                  Approve
                 </button>
-                <button type="button" className="btn btn--ghost" onClick={onReject}>
+                <button type="button" className="btn btn--ghost" onClick={onReject} disabled={revisionActive}>
                   Reject
                 </button>
+                {detail.reviewed && (
+                  <span className="editor-badge editor-badge--ok">Reviewed</span>
+                )}
                 {detail.slug && (
                   <span className="editor-preview__slug">
-                    Will live at <code>{articleUrl(detail.slug)}</code>
+                    Live URL: <code>{articleUrl(detail.slug)}</code>
                   </span>
                 )}
               </div>
+
+              <section className="editor-revise">
+                <h2>Request Llama revision</h2>
+                <p className="editor-revise__hint">
+                  Describe what to change (tone, structure, facts to emphasize). The API runs Llama
+                  and updates the draft body; refresh happens automatically while processing.
+                </p>
+                <textarea
+                  className="editor-revise__input"
+                  rows={5}
+                  value={revisionComment}
+                  onChange={(e) => setRevisionComment(e.target.value)}
+                  placeholder="e.g. Add a stronger opening, split the wall of text into shorter paragraphs, and clarify the business impact."
+                  disabled={revisionActive || reviseBusy}
+                />
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={onRevise}
+                  disabled={revisionActive || reviseBusy}
+                >
+                  {reviseBusy || revisionActive ? 'Revision in progress…' : 'Send to Llama'}
+                </button>
+              </section>
+
+              {detail.body_html_before_revision && detail.revision_status === 'completed' && (
+                <div className="editor-diff-toggle">
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => setShowPreviousBody((v) => !v)}
+                  >
+                    {showPreviousBody ? 'Hide previous version' : 'Show previous version'}
+                  </button>
+                </div>
+              )}
+
+              {showPreviousBody && detail.body_html_before_revision && (
+                <section className="editor-article editor-article--previous">
+                  <h2 className="editor-article__label">Before revision</h2>
+                  <ArticleBody html={detail.body_html_before_revision} />
+                </section>
+              )}
+
               <article className="editor-article">
                 <p className="editor-article__source">
                   Source:{' '}
@@ -202,9 +363,15 @@ export default function EditorPage() {
                 </p>
                 <h1>{detail.seo_title}</h1>
                 <p className="editor-article__meta">{detail.meta_description}</p>
+                {detail.error_message && (
+                  <p className="editor-error editor-error--inline">{detail.error_message}</p>
+                )}
                 <p className="editor-article__keywords">
                   {(detail.target_keywords || []).join(' · ')}
                 </p>
+                <h2 className="editor-article__label">
+                  {showPreviousBody ? 'After revision' : 'Current draft'}
+                </h2>
                 <ArticleBody html={detail.body_html} />
               </article>
             </>

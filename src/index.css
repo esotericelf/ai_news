@@ -1864,6 +1864,122 @@ button.article-share__btn {
   color: var(--text-muted);
 }
 
+.editor-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-strong);
+}
+
+.editor-badge--ok {
+  color: var(--bg);
+  background: #2d6a4f;
+  border-color: #2d6a4f;
+}
+
+.editor-revision-banner {
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-subtle);
+  font-size: 0.9375rem;
+}
+
+.editor-revision-banner strong {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.editor-revision-banner p {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+}
+
+.editor-revision-banner__poll {
+  font-size: 0.8125rem;
+  font-style: italic;
+}
+
+.editor-revision-banner--processing,
+.editor-revision-banner--queued {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+
+.editor-revision-banner--completed {
+  border-color: #2d6a4f;
+}
+
+.editor-revision-banner--failed {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.editor-revise {
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-revise h2 {
+  font-size: 1.125rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.editor-revise__hint {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-md);
+}
+
+.editor-revise__input {
+  display: block;
+  width: 100%;
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+  font: inherit;
+  line-height: 1.5;
+  border: 1px solid var(--border-strong);
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.editor-revise__input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.editor-diff-toggle {
+  margin-bottom: var(--space-md);
+}
+
+.editor-article--previous {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  border: 1px dashed var(--border-strong);
+  opacity: 0.85;
+}
+
+.editor-article__label {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: var(--space-md) 0 var(--space-sm);
+}
+
+.editor-error--inline {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.875rem;
+}
+
+.btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

@@ -58,4 +58,11 @@ export function rejectDraft(pk, reason = '') {
   });
 }
 
+export function reviseDraft(pk, comment) {
+  return editorFetch(`/api/editor/drafts/${pk}/revise/`, {
+    method: 'POST',
+    body: JSON.stringify({ comment }),
+  });
+}
+
 export { editorHeaders };
