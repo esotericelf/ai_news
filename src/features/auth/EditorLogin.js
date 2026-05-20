@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import EditorFirebaseUi from './EditorFirebaseUi';
-import { isFirebaseConfigured } from '../../firebase';
+import { getMissingFirebaseEnv, isFirebaseConfigured } from '../../firebase';
 
 export default function EditorLogin({ onApiKeyLogin }) {
   const { authError } = useAuth();
@@ -10,14 +10,25 @@ export default function EditorLogin({ onApiKeyLogin }) {
   const [keyInput, setKeyInput] = useState('');
 
   if (!isFirebaseConfigured) {
+    const missing = getMissingFirebaseEnv();
     return (
       <div className="editor-page">
         <div className="editor-auth">
           <h1>Editor — admin login</h1>
           <p>
-            Add all <code>REACT_APP_FIREBASE_*</code> variables (see <code>.env.example</code>),
-            redeploy, then use Google/GitHub below — or sign in with your API key for now.
+            Firebase is not active in this deploy. Set the missing Netlify environment variables,
+            then <strong>clear cache and redeploy</strong> (Create React App bakes env in at build
+            time).
           </p>
+          {missing.length > 0 && (
+            <ul className="editor-auth__missing">
+              {missing.map((name) => (
+                <li key={name}>
+                  <code>{name}</code>
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="editor-auth__row">
             <input
               type="password"

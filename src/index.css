@@ -1727,6 +1727,13 @@ button.article-share__btn {
   color: var(--text-muted);
 }
 
+.editor-auth__missing {
+  margin: var(--space-md) 0;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+  color: var(--accent);
+}
+
 .editor-auth--firebaseui {
   max-width: 22rem;
 }

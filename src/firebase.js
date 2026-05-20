@@ -10,11 +10,20 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
-export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey &&
-    firebaseConfig.authDomain &&
-    firebaseConfig.projectId
-);
+const REQUIRED_FIREBASE_ENV = [
+  ['apiKey', 'REACT_APP_FIREBASE_API_KEY'],
+  ['authDomain', 'REACT_APP_FIREBASE_AUTH_DOMAIN'],
+  ['projectId', 'REACT_APP_FIREBASE_PROJECT_ID'],
+];
+
+/** Which REACT_APP_FIREBASE_* vars were empty when this bundle was built (Netlify build-time). */
+export function getMissingFirebaseEnv() {
+  return REQUIRED_FIREBASE_ENV.filter(([key]) => !firebaseConfig[key]).map(
+    ([, envName]) => envName
+  );
+}
+
+export const isFirebaseConfigured = getMissingFirebaseEnv().length === 0;
 
 let app = null;
 let auth = null;
