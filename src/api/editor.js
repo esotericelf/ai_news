@@ -64,5 +64,3 @@ export function reviseDraft(pk, comment) {
     body: JSON.stringify({ comment }),
   });
 }
-
-export { editorHeaders };
