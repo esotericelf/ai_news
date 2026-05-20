@@ -1827,6 +1827,14 @@ button.article-share__btn {
   .editor-layout {
     grid-template-columns: 1fr;
   }
+
+  .editor-layout--detail .editor-queue {
+    display: none;
+  }
+
+  .editor-layout--detail .editor-preview {
+    min-height: calc(100dvh - 8rem);
+  }
 }
 
 .editor-queue ul {
@@ -1870,6 +1878,27 @@ button.article-share__btn {
   padding: var(--space-lg);
 }
 
+.editor-preview__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.editor-preview__scroll {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-mobile-nav {
+  display: none;
+}
+
+.editor-preview__dock .editor-preview__actions {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 .editor-preview__actions {
   display: flex;
   flex-wrap: wrap;
@@ -1878,6 +1907,16 @@ button.article-share__btn {
   margin-bottom: var(--space-lg);
   padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--border);
+}
+
+.editor-preview__slug--inline {
+  font-size: 0.8125rem;
+  margin-bottom: var(--space-md);
+  word-break: break-all;
+}
+
+.editor-preview__slug--inline code {
+  font-size: 0.75rem;
 }
 
 .btn--primary {
@@ -1984,9 +2023,14 @@ button.article-share__btn {
 }
 
 .editor-revise {
-  margin-bottom: var(--space-lg);
-  padding-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.editor-revise__title {
+  font-size: 1rem;
+  margin: 0 0 var(--space-xs);
 }
 
 .editor-revise h2 {
@@ -2015,6 +2059,118 @@ button.article-share__btn {
 .editor-revise__input:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.editor-revise__send {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .editor-mobile-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    margin: calc(-1 * var(--space-lg)) calc(-1 * var(--space-lg)) var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .editor-mobile-nav__back {
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+
+  .editor-mobile-nav__jump {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .editor-mobile-nav__jump select {
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    font: inherit;
+    font-size: 0.875rem;
+    border: 1px solid var(--border-strong);
+    background: var(--bg);
+  }
+
+  .editor-preview {
+    padding: var(--space-lg);
+    padding-bottom: 0;
+  }
+
+  .editor-preview__panel {
+    padding-bottom: 0;
+  }
+
+  .editor-preview__scroll {
+    padding-bottom: 13rem;
+  }
+
+  .editor-preview__dock {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin: 0 calc(-1 * var(--space-lg));
+    padding: var(--space-md) var(--space-lg)
+      calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+    background: var(--bg);
+    border-top: 1px solid var(--border-strong);
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .editor-preview__dock .editor-preview__actions {
+    gap: 0.5rem;
+    margin-bottom: var(--space-sm);
+  }
+
+  .editor-preview__dock .editor-revise__hint {
+    display: none;
+  }
+
+  .editor-preview__dock .editor-revise__title {
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+
+  .editor-preview__dock .editor-revise__input {
+    margin-bottom: 0.5rem;
+    min-height: 4.5rem;
+  }
+
+  .editor-page {
+    padding-bottom: 0;
+  }
+}
+
+@media (min-width: 901px) {
+  .editor-preview__dock {
+    order: -1;
+  }
+
+  .editor-preview__dock .editor-preview__actions {
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .editor-preview__dock .editor-revise {
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .editor-preview__dock .editor-revise__send {
+    width: auto;
+  }
 }
 
 .editor-diff-toggle {

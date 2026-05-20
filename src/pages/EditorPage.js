@@ -127,7 +127,7 @@ export default function EditorPage() {
     if (!selectedId) return;
     if (
       !window.confirm(
-        'Approve this article? It will be marked Reviewed and published on the public site.'
+        'Mark this article as reviewed? It is already live on the public site.'
       )
     ) {
       return;
@@ -135,9 +135,8 @@ export default function EditorPage() {
     setActionMsg('');
     try {
       const res = await approveDraft(selectedId);
-      setActionMsg(`Approved · live at ${articleUrl(res.slug)}`);
-      setSelectedId(null);
-      setDetail(null);
+      setActionMsg(`Marked reviewed · ${articleUrl(res.slug)}`);
+      clearSelection();
       loadQueue();
     } catch (e) {
       setActionMsg(e.detail || e.message);
@@ -151,8 +150,7 @@ export default function EditorPage() {
     try {
       await rejectDraft(selectedId, reason);
       setActionMsg('Rejected.');
-      setSelectedId(null);
-      setDetail(null);
+      clearSelection();
       loadQueue();
     } catch (e) {
       setActionMsg(e.detail || e.message);
@@ -197,6 +195,12 @@ export default function EditorPage() {
   const canApprove =
     detail && !revisionActive && detail.revision_status !== 'processing';
 
+  const clearSelection = () => {
+    setSelectedId(null);
+    setDetail(null);
+    setShowPreviousBody(false);
+  };
+
   return (
     <div className="editor-page">
       <header className="editor-header">
@@ -207,9 +211,10 @@ export default function EditorPage() {
           )}
           {stats && (
             <p className="editor-header__stats">
-              {stats.pending_review ?? stats.draft} awaiting review
-              {stats.revising ? ` · ${stats.revising} revising` : ''} · {stats.published} live ·{' '}
-              {stats.failed} failed
+              {stats.pending_review ?? 0} awaiting review
+              {stats.revising ? ` · ${stats.revising} revising` : ''} · {stats.published} live
+              {stats.held_draft ? ` · ${stats.held_draft} held (thin)` : ''} · {stats.failed}{' '}
+              failed
             </p>
           )}
         </div>
@@ -229,14 +234,16 @@ export default function EditorPage() {
       {error && <p className="editor-error">{error}</p>}
       {actionMsg && <p className="editor-action-msg">{actionMsg}</p>}
 
-      <div className="editor-layout">
-        <aside className="editor-queue">
-          <h2>Drafts</h2>
+      <div
+        className={`editor-layout${selectedId ? ' editor-layout--detail' : ''}`}
+      >
+        <aside className="editor-queue" aria-label="Articles awaiting review">
+          <h2>Needs review</h2>
           {status === 'loading' && <p>Loading…</p>}
           {!drafts.length && status === 'ready' && (
             <p className="editor-empty">
-              No drafts waiting. Set <code>SEO_REQUIRE_APPROVAL=1</code> on the API so new articles
-              enter this queue.
+              No live articles awaiting review. New substantial SEO posts appear here with{' '}
+              <code>reviewed=false</code> while already on the site.
             </p>
           )}
           <ul>
@@ -263,111 +270,147 @@ export default function EditorPage() {
         </aside>
 
         <main className="editor-preview">
-          {!detail && <p className="editor-empty">Select a draft to review.</p>}
+          {!detail && <p className="editor-empty">Select an article to review.</p>}
           {detail && (
-            <>
-              {detail.revision_status && detail.revision_status !== 'idle' && (
-                <div
-                  className={`editor-revision-banner editor-revision-banner--${detail.revision_status}`}
-                  role="status"
-                >
-                  <strong>{revisionLabel(detail.revision_status)}</strong>
-                  {detail.revision_note && <p>{detail.revision_note}</p>}
-                  {revisionActive && <p className="editor-revision-banner__poll">Checking for updates…</p>}
-                </div>
-              )}
-
-              <div className="editor-preview__actions">
+            <div className="editor-preview__panel">
+              <div className="editor-mobile-nav">
                 <button
                   type="button"
-                  className="btn btn--primary"
-                  onClick={onApprove}
-                  disabled={!canApprove}
-                  title={
-                    !canApprove
-                      ? 'Wait until revision finishes before approving'
-                      : 'Mark reviewed and publish'
-                  }
+                  className="btn btn--ghost editor-mobile-nav__back"
+                  onClick={clearSelection}
                 >
-                  Approve
+                  ← Queue
                 </button>
-                <button type="button" className="btn btn--ghost" onClick={onReject} disabled={revisionActive}>
-                  Reject
-                </button>
-                {detail.reviewed && (
-                  <span className="editor-badge editor-badge--ok">Reviewed</span>
-                )}
-                {detail.slug && (
-                  <span className="editor-preview__slug">
-                    Live URL: <code>{articleUrl(detail.slug)}</code>
-                  </span>
+                {drafts.length > 1 && (
+                  <label className="editor-mobile-nav__jump">
+                    <span className="visually-hidden">Switch article</span>
+                    <select
+                      value={selectedId}
+                      onChange={(e) => setSelectedId(Number(e.target.value))}
+                      aria-label="Switch article in queue"
+                    >
+                      {drafts.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.seo_title || d.source_title}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 )}
               </div>
 
-              <section className="editor-revise">
-                <h2>Request Llama revision</h2>
-                <p className="editor-revise__hint">
-                  Describe what to change (tone, structure, facts to emphasize). The API runs Llama
-                  and updates the draft body; refresh happens automatically while processing.
-                </p>
-                <textarea
-                  className="editor-revise__input"
-                  rows={5}
-                  value={revisionComment}
-                  onChange={(e) => setRevisionComment(e.target.value)}
-                  placeholder="e.g. Add a stronger opening, split the wall of text into shorter paragraphs, and clarify the business impact."
-                  disabled={revisionActive || reviseBusy}
-                />
-                <button
-                  type="button"
-                  className="btn btn--primary"
-                  onClick={onRevise}
-                  disabled={revisionActive || reviseBusy}
-                >
-                  {reviseBusy || revisionActive ? 'Revision in progress…' : 'Send to Llama'}
-                </button>
-              </section>
+              <div className="editor-preview__scroll">
+                {detail.revision_status && detail.revision_status !== 'idle' && (
+                  <div
+                    className={`editor-revision-banner editor-revision-banner--${detail.revision_status}`}
+                    role="status"
+                  >
+                    <strong>{revisionLabel(detail.revision_status)}</strong>
+                    {detail.revision_note && <p>{detail.revision_note}</p>}
+                    {revisionActive && (
+                      <p className="editor-revision-banner__poll">Checking for updates…</p>
+                    )}
+                  </div>
+                )}
 
-              {detail.body_html_before_revision && detail.revision_status === 'completed' && (
-                <div className="editor-diff-toggle">
+                {detail.body_html_before_revision && detail.revision_status === 'completed' && (
+                  <div className="editor-diff-toggle">
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => setShowPreviousBody((v) => !v)}
+                    >
+                      {showPreviousBody ? 'Hide previous version' : 'Show previous version'}
+                    </button>
+                  </div>
+                )}
+
+                {showPreviousBody && detail.body_html_before_revision && (
+                  <section className="editor-article editor-article--previous">
+                    <h2 className="editor-article__label">Before revision</h2>
+                    <ArticleBody html={detail.body_html_before_revision} />
+                  </section>
+                )}
+
+                <article className="editor-article">
+                  <p className="editor-article__source">
+                    Source:{' '}
+                    <a href={detail.source_link} target="_blank" rel="noopener noreferrer">
+                      {detail.source_title}
+                    </a>
+                  </p>
+                  <h1>{detail.seo_title}</h1>
+                  <p className="editor-article__meta">{detail.meta_description}</p>
+                  {detail.error_message && (
+                    <p className="editor-error editor-error--inline">{detail.error_message}</p>
+                  )}
+                  <p className="editor-article__keywords">
+                    {(detail.target_keywords || []).join(' · ')}
+                  </p>
+                  {detail.slug && (
+                    <p className="editor-preview__slug editor-preview__slug--inline">
+                      Live: <code>{articleUrl(detail.slug)}</code>
+                    </p>
+                  )}
+                  <h2 className="editor-article__label">
+                    {showPreviousBody ? 'After revision' : 'Live preview'}
+                  </h2>
+                  <ArticleBody html={detail.body_html} />
+                </article>
+              </div>
+
+              <div className="editor-preview__dock">
+                <div className="editor-preview__actions">
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    onClick={onApprove}
+                    disabled={!canApprove}
+                    title={
+                      !canApprove
+                        ? 'Wait until revision finishes before marking reviewed'
+                        : 'Mark as reviewed (already live)'
+                    }
+                  >
+                    Mark reviewed
+                  </button>
                   <button
                     type="button"
                     className="btn btn--ghost"
-                    onClick={() => setShowPreviousBody((v) => !v)}
+                    onClick={onReject}
+                    disabled={revisionActive}
                   >
-                    {showPreviousBody ? 'Hide previous version' : 'Show previous version'}
+                    Reject
                   </button>
+                  {detail.reviewed && (
+                    <span className="editor-badge editor-badge--ok">Reviewed</span>
+                  )}
                 </div>
-              )}
 
-              {showPreviousBody && detail.body_html_before_revision && (
-                <section className="editor-article editor-article--previous">
-                  <h2 className="editor-article__label">Before revision</h2>
-                  <ArticleBody html={detail.body_html_before_revision} />
+                <section className="editor-revise" aria-label="Request Llama revision">
+                  <h2 className="editor-revise__title">Llama revision</h2>
+                  <p className="editor-revise__hint">
+                    Short instructions for tone, structure, or facts to emphasize.
+                  </p>
+                  <textarea
+                    className="editor-revise__input"
+                    rows={3}
+                    value={revisionComment}
+                    onChange={(e) => setRevisionComment(e.target.value)}
+                    placeholder="e.g. Stronger opening, shorter paragraphs, clearer business impact."
+                    disabled={revisionActive || reviseBusy}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn--primary editor-revise__send"
+                    onClick={onRevise}
+                    disabled={revisionActive || reviseBusy}
+                  >
+                    {reviseBusy || revisionActive ? 'Revising…' : 'Send to Llama'}
+                  </button>
                 </section>
-              )}
-
-              <article className="editor-article">
-                <p className="editor-article__source">
-                  Source:{' '}
-                  <a href={detail.source_link} target="_blank" rel="noopener noreferrer">
-                    {detail.source_title}
-                  </a>
-                </p>
-                <h1>{detail.seo_title}</h1>
-                <p className="editor-article__meta">{detail.meta_description}</p>
-                {detail.error_message && (
-                  <p className="editor-error editor-error--inline">{detail.error_message}</p>
-                )}
-                <p className="editor-article__keywords">
-                  {(detail.target_keywords || []).join(' · ')}
-                </p>
-                <h2 className="editor-article__label">
-                  {showPreviousBody ? 'After revision' : 'Current draft'}
-                </h2>
-                <ArticleBody html={detail.body_html} />
-              </article>
-            </>
+              </div>
+            </div>
           )}
         </main>
       </div>
