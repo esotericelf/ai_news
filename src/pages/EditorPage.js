@@ -82,7 +82,7 @@ export default function EditorPage() {
     const d = await fetchDraft(selectedId);
     setDetail(d);
     return d;
-  }, [selectedId, apiKey]);
+  }, [selectedId, isAuthed]);
 
   useEffect(() => {
     loadQueue();
