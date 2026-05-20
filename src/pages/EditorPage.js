@@ -10,7 +10,8 @@ import {
   reviseDraft,
 } from '../api/editor';
 import { articleUrl } from '../config';
-
+import { useAuth } from '../features/auth/AuthContext';
+import EditorLogin from '../features/auth/EditorLogin';
 const STORAGE_KEY = 'ai_news_editor_key';
 
 const REVISION_ACTIVE = new Set(['queued', 'processing']);
@@ -31,8 +32,10 @@ function revisionLabel(status) {
 }
 
 export default function EditorPage() {
+  const { user, loading: authLoading, signOut: firebaseSignOut, isFirebaseConfigured: fbOn } =
+    useAuth();
   const [apiKey, setApiKey] = useState(() => sessionStorage.getItem(STORAGE_KEY) || '');
-  const [keyInput, setKeyInput] = useState(apiKey);
+  const isAuthed = fbOn ? !!user : !!apiKey;
   const [stats, setStats] = useState(null);
   const [drafts, setDrafts] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -44,20 +47,23 @@ export default function EditorPage() {
   const [showPreviousBody, setShowPreviousBody] = useState(false);
   const [reviseBusy, setReviseBusy] = useState(false);
 
-  const saveKey = () => {
-    sessionStorage.setItem(STORAGE_KEY, keyInput.trim());
-    setApiKey(keyInput.trim());
-    window.location.reload();
+  const saveApiKey = (key) => {
+    sessionStorage.setItem(STORAGE_KEY, key);
+    setApiKey(key);
   };
 
-  const clearKey = () => {
+  const handleSignOut = async () => {
+    if (fbOn && user) {
+      await firebaseSignOut();
+    }
     sessionStorage.removeItem(STORAGE_KEY);
     setApiKey('');
-    setKeyInput('');
+    setSelectedId(null);
+    setDetail(null);
   };
 
   const loadQueue = useCallback(async () => {
-    if (!apiKey) return;
+    if (!isAuthed) return;
     setStatus('loading');
     setError('');
     try {
@@ -69,10 +75,10 @@ export default function EditorPage() {
       setError(e.detail || e.message);
       setStatus('failed');
     }
-  }, [apiKey]);
+  }, [isAuthed]);
 
   const refreshDetail = useCallback(async () => {
-    if (!selectedId || !apiKey) return null;
+    if (!selectedId || !isAuthed) return null;
     const d = await fetchDraft(selectedId);
     setDetail(d);
     return d;
@@ -83,7 +89,7 @@ export default function EditorPage() {
   }, [loadQueue]);
 
   useEffect(() => {
-    if (!selectedId || !apiKey) {
+    if (!selectedId || !isAuthed) {
       setDetail(null);
       setRevisionComment('');
       setShowPreviousBody(false);
@@ -104,7 +110,7 @@ export default function EditorPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedId, apiKey]);
+  }, [selectedId, isAuthed]);
 
   const revisionStatus = detail?.revision_status;
   const detailId = detail?.id;
@@ -175,35 +181,16 @@ export default function EditorPage() {
     }
   };
 
-  if (!apiKey) {
+  if (authLoading) {
     return (
       <div className="editor-page">
-        <div className="editor-auth">
-          <h1>Editor — admin login</h1>
-          <p>
-            Sign in with your <code>EDITOR_API_KEY</code> (or <code>API_KEY</code>) from{' '}
-            <code>AI_News_Scraper/.env</code>. Stored in this browser session only.
-          </p>
-          <div className="editor-auth__row">
-            <input
-              type="password"
-              value={keyInput}
-              onChange={(e) => setKeyInput(e.target.value)}
-              placeholder="Admin API key"
-              autoComplete="off"
-            />
-            <button type="button" onClick={saveKey}>
-              Sign in
-            </button>
-          </div>
-          <p className="editor-auth__hint">
-            Review drafts: <strong>Approve</strong> marks them reviewed and publishes, or send{' '}
-            <strong>revision notes</strong> to Llama and preview changes here before approving.
-          </p>
-          <Link to="/">← Back to site</Link>
-        </div>
+        <p className="editor-empty">Checking sign-in…</p>
       </div>
     );
+  }
+
+  if (!isAuthed) {
+    return <EditorLogin onApiKeyLogin={saveApiKey} />;
   }
 
   const revisionActive = detail && REVISION_ACTIVE.has(detail.revision_status);
@@ -215,6 +202,9 @@ export default function EditorPage() {
       <header className="editor-header">
         <div>
           <h1>Editor — review queue</h1>
+          {user?.email && (
+            <p className="editor-header__user">{user.email}</p>
+          )}
           {stats && (
             <p className="editor-header__stats">
               {stats.pending_review ?? stats.draft} awaiting review
@@ -227,7 +217,7 @@ export default function EditorPage() {
           <button type="button" className="btn btn--ghost" onClick={loadQueue}>
             Refresh
           </button>
-          <button type="button" className="btn btn--ghost" onClick={clearKey}>
+          <button type="button" className="btn btn--ghost" onClick={handleSignOut}>
             Sign out
           </button>
           <Link to="/" className="btn btn--ghost">

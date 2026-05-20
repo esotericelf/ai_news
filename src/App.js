@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import GoogleAnalytics from './components/analytics/GoogleAnalytics';
+import { AuthProvider } from './features/auth/AuthContext';
 import AppLayout from './layout/AppLayout';
 import ArticlePage from './pages/ArticlePage';
 import CategoryPage from './pages/CategoryPage';
@@ -19,6 +20,7 @@ export default function App() {
       <HelmetProvider>
         <BrowserRouter>
           <GoogleAnalytics />
+          <AuthProvider>
           <Routes>
             <Route path="editor" element={<EditorPage />} />
             <Route element={<AppLayout />}>
@@ -31,6 +33,7 @@ export default function App() {
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </HelmetProvider>
     </Provider>

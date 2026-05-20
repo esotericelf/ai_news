@@ -6,7 +6,7 @@ Editorial frontend for SEO-ready AI and technology articles from the [AI_News_Sc
 
 - **Public site:** Home, article pages (`/news/:slug`), category and tag listings, topics browse, trending tags
 - **SEO:** Meta tags, JSON-LD, dynamic `sitemap.xml` / `robots.txt` (fetched from API at build time)
-- **Editor** (`/editor`): Admin API-key login, draft queue, Approve, Llama revision requests, reject
+- **Editor** (`/editor`): Google or GitHub sign-in (Firebase), draft queue, Approve, Llama revision, reject
 - **Analytics:** Google Analytics via `REACT_APP_GA_MEASUREMENT_ID` (loaded in `GoogleAnalytics.js`)
 
 Backend scraping, LLM generation, and approval logic live in **AI_News_Scraper**, not this repo.
@@ -19,16 +19,28 @@ npm install
 npm start
 ```
 
-Configure `.env.local` — see `.env.example`. Minimum:
+Configure `.env.local` — see `.env.example`.
 
-| Variable | Purpose |
-|----------|---------|
-| `REACT_APP_API_BASE_URL` | Django API (e.g. `http://localhost:8000`) |
-| `REACT_APP_API_KEY` | Matches backend `API_KEY` if required |
-| `REACT_APP_SITE_URL` | `http://localhost:3000` locally |
-| `REACT_APP_EDITOR_API_KEY` | Unlocks `/editor` (can match `API_KEY`) |
+**Typical local setup (ngrok + Docker):**
 
-Dev server proxies `/api`, `/health`, `/robots.txt`, `/sitemap.xml` to the API when `REACT_APP_USE_DEV_PROXY=true` (default).
+```bash
+# AI_News_Scraper
+docker compose up -d web
+ngrok http 8000
+```
+
+```env
+REACT_APP_API_BASE_URL=https://YOUR-SUBDOMAIN.ngrok-free.dev
+REACT_APP_API_KEY=<same as AI_News_Scraper API_KEY>
+REACT_APP_SITE_URL=http://localhost:3000
+REACT_APP_USE_DEV_PROXY=false
+```
+
+The browser calls ngrok directly; Django must allow `http://localhost:3000` in `CORS_ALLOWED_ORIGINS`.
+
+**Alternative (no ngrok):** `REACT_APP_API_BASE_URL=http://localhost:8000` and `REACT_APP_USE_DEV_PROXY=true` — then the dev server proxies `/api`, `/health`, `/robots.txt`, `/sitemap.xml`.
+
+Add `REACT_APP_FIREBASE_*` for Google/GitHub editor sign-in (see below).
 
 ## Scripts
 
@@ -94,10 +106,25 @@ Workflow: `.github/workflows/deploy-netlify.yml` (runs on push to `main` / `mast
 - `https://your-site.netlify.app/sitemap.xml` starts with `<?xml` (not HTML).
 - `/editor` works with your editor API key when `SEO_REQUIRE_APPROVAL=1` on the backend.
 
+## Editor Firebase auth (Google + GitHub)
+
+1. [Firebase Console](https://console.firebase.google.com/) → create project → add **Web app** → copy config into `.env.local` (`REACT_APP_FIREBASE_*`).
+2. **Authentication** → Sign-in method → enable **Google** and **GitHub** (add GitHub OAuth app ID/secret if needed).
+3. **Authentication** → Settings → add authorized domains: `localhost`, `ainewsrepo.netlify.app`, your custom domain.
+4. On **AI_News_Scraper** `.env`:
+   - `FIREBASE_PROJECT_ID` = same project ID
+   - `FIREBASE_SERVICE_ACCOUNT_JSON` = service account JSON (Project settings → Service accounts → Generate key), or `GOOGLE_APPLICATION_CREDENTIALS` path
+   - `EDITOR_ALLOWED_EMAILS` = comma-separated emails allowed to use the editor (your Google/GitHub login emails)
+5. Rebuild Docker: `docker compose up -d --build web`
+6. Netlify: add all `REACT_APP_FIREBASE_*` env vars and redeploy.
+
+Editor API calls send `Authorization: Bearer <Firebase ID token>`. The backend verifies the token and checks the email allowlist.
+
 ## Project layout
 
 ```
 src/api/           API clients (published, taxonomy, editor)
+src/features/auth/ Firebase AuthProvider + editor login
 src/pages/         Routes (home, article, category, tag, topics, editor)
 src/features/      Article UI, taxonomy nav, trending
 src/store/         Redux

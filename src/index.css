@@ -1727,6 +1727,48 @@ button.article-share__btn {
   color: var(--text-muted);
 }
 
+.editor-auth__providers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin: var(--space-lg) 0;
+}
+
+.editor-auth__toggle {
+  margin-top: var(--space-md);
+}
+
+.editor-header__user {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.btn--oauth {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  font: inherit;
+}
+
+.btn--google {
+  background: #fff;
+  color: #3c4043;
+}
+
+.btn--github {
+  background: #24292f;
+  color: #fff;
+  border-color: #24292f;
+}
+
+.btn--oauth:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .editor-header {
   max-width: var(--max-width);
   margin: 0 auto var(--space-lg);

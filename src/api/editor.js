@@ -1,21 +1,42 @@
-function editorHeaders() {
-  const key =
-    process.env.REACT_APP_EDITOR_API_KEY ||
-    process.env.REACT_APP_API_KEY ||
-    '';
+/** Optional: supply Firebase ID token for editor API calls. */
+let tokenProvider = null;
+
+export function setEditorTokenProvider(fn) {
+  tokenProvider = fn;
+}
+
+async function editorHeaders() {
   const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
-  if (key) headers['X-Api-Key'] = key;
+
+  if (tokenProvider) {
+    try {
+      const token = await tokenProvider();
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+        return headers;
+      }
+    } catch {
+      /* fall through to API key */
+    }
+  }
+
+  const key =
+    process.env.REACT_APP_EDITOR_API_KEY || process.env.REACT_APP_API_KEY || '';
+  if (key) {
+    headers['X-Api-Key'] = key;
+  }
   return headers;
 }
 
 async function editorFetch(path, options = {}) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const base = process.env.NODE_ENV === 'development' &&
+  const base =
+    process.env.NODE_ENV === 'development' &&
     process.env.REACT_APP_USE_DEV_PROXY !== 'false'
-    ? ''
-    : (process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+      ? ''
+      : (process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
   const url = `${base}${normalizedPath}`;
-  const headers = { ...editorHeaders(), ...options.headers };
+  const headers = { ...(await editorHeaders()), ...options.headers };
   if (/ngrok/i.test(url)) {
     headers['ngrok-skip-browser-warning'] = 'true';
   }
