@@ -1,26 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import EditorFirebaseUi from './EditorFirebaseUi';
 import { isFirebaseConfigured } from '../../firebase';
 
 export default function EditorLogin({ onApiKeyLogin }) {
-  const { signInWithGoogle, signInWithGitHub, authError, setAuthError } = useAuth();
-  const [busy, setBusy] = useState('');
-  const [showApiKey, setShowApiKey] = useState(!isFirebaseConfigured);
+  const { authError } = useAuth();
+  const [showApiKey, setShowApiKey] = useState(false);
   const [keyInput, setKeyInput] = useState('');
-
-  const handleProvider = async (provider) => {
-    setAuthError('');
-    setBusy(provider);
-    try {
-      if (provider === 'google') await signInWithGoogle();
-      else await signInWithGitHub();
-    } catch {
-      /* authError set in context */
-    } finally {
-      setBusy('');
-    }
-  };
 
   if (!isFirebaseConfigured) {
     return (
@@ -28,21 +15,24 @@ export default function EditorLogin({ onApiKeyLogin }) {
         <div className="editor-auth">
           <h1>Editor — admin login</h1>
           <p>
-            Set <code>REACT_APP_FIREBASE_*</code> for Google/GitHub sign-in, or use your{' '}
-            <code>EDITOR_API_KEY</code> below.
+            Add all <code>REACT_APP_FIREBASE_*</code> variables (see <code>.env.example</code>),
+            redeploy, then use Google/GitHub below — or sign in with your API key for now.
           </p>
           <div className="editor-auth__row">
             <input
               type="password"
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}
-              placeholder="EDITOR_API_KEY"
+              placeholder="Same value as AI_News_Scraper API_KEY"
               autoComplete="off"
             />
             <button type="button" onClick={() => onApiKeyLogin?.(keyInput.trim())}>
               Sign in
             </button>
           </div>
+          <p className="editor-auth__hint">
+            Paste the <code>API_KEY</code> from <code>AI_News_Scraper/.env</code> (not your email).
+          </p>
           <Link to="/">← Back to site</Link>
         </div>
       </div>
@@ -51,28 +41,14 @@ export default function EditorLogin({ onApiKeyLogin }) {
 
   return (
     <div className="editor-page">
-      <div className="editor-auth">
+      <div className="editor-auth editor-auth--firebaseui">
         <h1>Editor — sign in</h1>
-        <p>Sign in with an allowed Google or GitHub account to review and publish drafts.</p>
+        <p className="editor-auth__hint">
+          Choose Google or GitHub (Firebase sign-in). Your email must be in{' '}
+          <code>EDITOR_ALLOWED_EMAILS</code> on the API.
+        </p>
 
-        <div className="editor-auth__providers">
-          <button
-            type="button"
-            className="btn btn--oauth btn--google"
-            disabled={!!busy}
-            onClick={() => handleProvider('google')}
-          >
-            {busy === 'google' ? 'Signing in…' : 'Continue with Google'}
-          </button>
-          <button
-            type="button"
-            className="btn btn--oauth btn--github"
-            disabled={!!busy}
-            onClick={() => handleProvider('github')}
-          >
-            {busy === 'github' ? 'Signing in…' : 'Continue with GitHub'}
-          </button>
-        </div>
+        <EditorFirebaseUi />
 
         {authError && <p className="editor-error">{authError}</p>}
 
@@ -91,7 +67,7 @@ export default function EditorLogin({ onApiKeyLogin }) {
                   type="password"
                   value={keyInput}
                   onChange={(e) => setKeyInput(e.target.value)}
-                  placeholder="EDITOR_API_KEY"
+                  placeholder="API_KEY from AI_News_Scraper/.env"
                   autoComplete="off"
                 />
                 <button type="button" onClick={() => onApiKeyLogin(keyInput.trim())}>
@@ -102,9 +78,6 @@ export default function EditorLogin({ onApiKeyLogin }) {
           </>
         )}
 
-        <p className="editor-auth__hint">
-          Your email must be listed in <code>EDITOR_ALLOWED_EMAILS</code> on the API server.
-        </p>
         <Link to="/">← Back to site</Link>
       </div>
     </div>

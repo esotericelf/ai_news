@@ -1727,6 +1727,23 @@ button.article-share__btn {
   color: var(--text-muted);
 }
 
+.editor-auth--firebaseui {
+  max-width: 22rem;
+}
+
+.editor-firebaseui {
+  margin: var(--space-md) 0 var(--space-lg);
+}
+
+/* FirebaseUI default card — keep readable on our background */
+.editor-firebaseui .firebaseui-container {
+  max-width: 100%;
+}
+
+.editor-firebaseui .firebaseui-card-content {
+  padding: 0;
+}
+
 .editor-auth__providers {
   display: flex;
   flex-direction: column;
