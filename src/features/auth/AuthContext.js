@@ -31,8 +31,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const getIdToken = useCallback(async () => {
-    if (!user) return null;
-    return user.getIdToken();
+    const active = user || auth?.currentUser;
+    if (!active) return null;
+    return active.getIdToken();
   }, [user]);
 
   useEffect(() => {

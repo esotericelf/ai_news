@@ -63,7 +63,7 @@ export default function EditorPage() {
   };
 
   const loadQueue = useCallback(async () => {
-    if (!isAuthed) return;
+    if (!isAuthed || authLoading) return;
     setStatus('loading');
     setError('');
     try {
@@ -75,7 +75,7 @@ export default function EditorPage() {
       setError(e.detail || e.message);
       setStatus('failed');
     }
-  }, [isAuthed]);
+  }, [isAuthed, authLoading]);
 
   const refreshDetail = useCallback(async () => {
     if (!selectedId || !isAuthed) return null;

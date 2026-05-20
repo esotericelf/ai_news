@@ -1,3 +1,5 @@
+import { auth } from '../firebase';
+
 /** Optional: supply Firebase ID token for editor API calls. */
 let tokenProvider = null;
 
@@ -8,16 +10,24 @@ export function setEditorTokenProvider(fn) {
 async function editorHeaders() {
   const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
 
+  let token = null;
   if (tokenProvider) {
     try {
-      const token = await tokenProvider();
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-        return headers;
-      }
+      token = await tokenProvider();
     } catch {
-      /* fall through to API key */
+      token = null;
     }
+  }
+  if (!token && auth?.currentUser) {
+    try {
+      token = await auth.currentUser.getIdToken();
+    } catch {
+      token = null;
+    }
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    return headers;
   }
 
   const key =
