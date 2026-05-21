@@ -20,7 +20,7 @@ export default function AppLayout() {
     <>
       <SkipLink />
       <Header />
-      <main id="main-content" className="site-main">
+      <main id="main-content" className="site-main" tabIndex={-1}>
         <Outlet />
       </main>
       <Footer />

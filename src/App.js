@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import GoogleAnalytics from './components/analytics/GoogleAnalytics';
+import ScrollToTop from './components/navigation/ScrollToTop';
 import { AuthProvider } from './features/auth/AuthContext';
 import AppLayout from './layout/AppLayout';
 import ArticlePage from './pages/ArticlePage';
@@ -19,6 +20,7 @@ export default function App() {
     <Provider store={store}>
       <HelmetProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <GoogleAnalytics />
           <AuthProvider>
           <Routes>
