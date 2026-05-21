@@ -13,6 +13,8 @@ Backend scraping, LLM generation, and approval logic live in **AI_News_Scraper**
 
 **How to view logs, DB counts, editor stats, and API data:** see [AI_News_Scraper/docs/VIEWING_DATA.md](../AI_News_Scraper/docs/VIEWING_DATA.md).
 
+**Security headers (CSP, HSTS, nosniff):** [docs/SECURITY.md](docs/SECURITY.md) (Netlify); API: [AI_News_Scraper/docs/SECURITY.md](../AI_News_Scraper/docs/SECURITY.md).
+
 ## Local setup
 
 ```bash
