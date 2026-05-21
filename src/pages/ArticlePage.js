@@ -6,7 +6,7 @@ import ErrorState from '../components/ui/ErrorState';
 import Tag from '../components/ui/Tag';
 import ArticleBody from '../features/articles/ArticleBody';
 import ArticleMeta from '../features/articles/ArticleMeta';
-import ArticleShareCompact from '../features/articles/ArticleShareCompact';
+import ArticleSharePopover from '../features/articles/ArticleSharePopover';
 import RelatedArticles from '../features/articles/RelatedArticles';
 import JsonLd from '../seo/JsonLd';
 import SeoHead from '../seo/SeoHead';
@@ -102,7 +102,7 @@ export default function ArticlePage() {
               ))}
             </ul>
           )}
-          <ArticleShareCompact url={canonical} title={title} className="article-header__share" />
+          <ArticleSharePopover url={canonical} title={title} className="article-header__share" />
         </header>
 
         <figure className="article-figure">

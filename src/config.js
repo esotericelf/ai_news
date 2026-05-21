@@ -21,7 +21,7 @@ export const config = {
   devProxyTarget,
   siteUrl,
   apiKey: process.env.REACT_APP_API_KEY || '',
-  siteName: process.env.REACT_APP_SITE_NAME || 'AI News Digest',
+  siteName: process.env.REACT_APP_SITE_NAME || 'AI News Repo',
   siteDescription:
     process.env.REACT_APP_SITE_DESCRIPTION ||
     'Curated artificial intelligence and technology news, optimized for clarity and discovery.',

@@ -98,7 +98,7 @@ export default function TaxonomyNav() {
   useEffect(() => {
     if (!isMobile || !openSlug || !navRef.current) return;
     const openItem = navRef.current.querySelector('.taxonomy-nav__item--open');
-    openItem?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+    openItem?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'auto' });
   }, [isMobile, openSlug]);
 
   useEffect(() => {
@@ -161,29 +161,53 @@ export default function TaxonomyNav() {
                 onMouseEnter={() => hoverCapable && hasSubs && setOpenSlug(l1.slug)}
                 onMouseLeave={() => hoverCapable && hasSubs && setOpenSlug(null)}
               >
-                <Link
-                  to={categoryUrl(l1.slug)}
-                  className="taxonomy-nav__l1"
-                  aria-expanded={hasSubs ? isOpen : undefined}
-                  aria-haspopup={hasSubs ? 'true' : undefined}
-                  aria-controls={hasSubs ? panelId : undefined}
-                  onClick={(e) => {
-                    if (hasSubs) {
-                      e.preventDefault();
-                      toggleCategory(l1, hasSubs, isOpen);
-                    } else {
-                      setOpenSlug(null);
-                    }
-                  }}
-                  onFocus={() => hasSubs && setOpenSlug(l1.slug)}
-                >
-                  <span>{l1.nav_label || l1.title}</span>
-                  {hasSubs && (
-                    <span className="taxonomy-nav__chevron" aria-hidden="true">
-                      {isOpen ? '▴' : '▾'}
-                    </span>
-                  )}
-                </Link>
+                {hasSubs && isMobile ? (
+                  <div className="taxonomy-nav__l1-split">
+                    <Link
+                      to={categoryUrl(l1.slug)}
+                      className="taxonomy-nav__l1 taxonomy-nav__l1--label"
+                      onClick={() => setOpenSlug(null)}
+                    >
+                      {l1.nav_label || l1.title}
+                    </Link>
+                    <button
+                      type="button"
+                      className="taxonomy-nav__toggle"
+                      aria-expanded={isOpen}
+                      aria-controls={panelId}
+                      aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${l1.nav_label || l1.title}`}
+                      onClick={() => toggleCategory(l1, hasSubs, isOpen)}
+                    >
+                      <span className="taxonomy-nav__chevron" aria-hidden="true">
+                        {isOpen ? '▴' : '▾'}
+                      </span>
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    to={categoryUrl(l1.slug)}
+                    className="taxonomy-nav__l1"
+                    aria-expanded={hasSubs ? isOpen : undefined}
+                    aria-haspopup={hasSubs ? 'true' : undefined}
+                    aria-controls={hasSubs ? panelId : undefined}
+                    onClick={(e) => {
+                      if (hasSubs && !isMobile) {
+                        e.preventDefault();
+                        toggleCategory(l1, hasSubs, isOpen);
+                      } else {
+                        setOpenSlug(null);
+                      }
+                    }}
+                    onFocus={() => hasSubs && !isMobile && setOpenSlug(l1.slug)}
+                  >
+                    <span>{l1.nav_label || l1.title}</span>
+                    {hasSubs && (
+                      <span className="taxonomy-nav__chevron" aria-hidden="true">
+                        {isOpen ? '▴' : '▾'}
+                      </span>
+                    )}
+                  </Link>
+                )}
                 {hasSubs && !isMobile && isOpen && (
                   <CategoryPanel
                     l1={l1}

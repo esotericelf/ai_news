@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ArticleBody from '../features/articles/ArticleBody';
-import ArticleShareCompact from '../features/articles/ArticleShareCompact';
+import ArticleSharePopover from '../features/articles/ArticleSharePopover';
 import {
   approveDraft,
   fetchDraft,
@@ -380,7 +380,7 @@ export default function EditorPage() {
                   <h1>{detail.seo_title}</h1>
                   <p className="editor-article__meta">{detail.meta_description}</p>
                   {detail.slug && (
-                    <ArticleShareCompact
+                    <ArticleSharePopover
                       url={absoluteArticleUrl(detail.slug)}
                       title={detail.seo_title}
                       className="editor-article__share"

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { absoluteArticleUrl, articleUrl } from '../../config';
-import ArticleShareCompact from './ArticleShareCompact';
+import ArticleSharePopover from './ArticleSharePopover';
 import ArticleImage from '../../components/ui/ArticleImage';
 import { articleCategory, articleTitle } from '../../utils/article';
 import { formatRelativeDate } from '../../utils/format';
@@ -37,7 +37,7 @@ export default function ArticleCard({ article, variant = 'default' }) {
         </div>
       </Link>
       {article.slug && (
-        <ArticleShareCompact
+        <ArticleSharePopover
           url={absoluteArticleUrl(article.slug)}
           title={title}
           className="story-card__share"
