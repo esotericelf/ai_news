@@ -17,6 +17,20 @@ const STORAGE_KEY = 'ai_news_editor_key';
 
 const REVISION_ACTIVE = new Set(['queued', 'processing']);
 
+/** Stats line — only uses boolean status model (no legacy failed/published keys). */
+function editorStatsLine(stats) {
+  if (!stats) return null;
+  const parts = [
+    `${stats.pending_review ?? 0} in queue`,
+  ];
+  if (stats.revising) parts.push(`${stats.revising} revising`);
+  parts.push(`${stats.public ?? 0} public`);
+  if (stats.on_feed != null) parts.push(`${stats.on_feed} on feed`);
+  parts.push(`${stats.draft ?? 0} draft (thin)`);
+  parts.push(`${stats.reviewed ?? 0} signed off`);
+  return parts.join(' · ');
+}
+
 function revisionLabel(status) {
   switch (status) {
     case 'processing':
@@ -150,7 +164,7 @@ export default function EditorPage() {
     setActionMsg('');
     try {
       await rejectDraft(selectedId, reason);
-      setActionMsg('Rejected.');
+      setActionMsg('Moved to draft (unpublished).');
       clearSelection();
       loadQueue();
     } catch (e) {
@@ -211,12 +225,13 @@ export default function EditorPage() {
             <p className="editor-header__user">{user.email}</p>
           )}
           {stats && (
-            <p className="editor-header__stats">
-              {stats.pending_review ?? 0} awaiting review
-              {stats.revising ? ` · ${stats.revising} revising` : ''} · {stats.published} live
-              {stats.held_draft ? ` · ${stats.held_draft} held (thin)` : ''} · {stats.failed}{' '}
-              failed
-            </p>
+            <>
+              <p className="editor-header__stats">{editorStatsLine(stats)}</p>
+              <p className="editor-header__legend">
+                Queue = public and not signed off. Draft = thin, not on site. There is no
+                separate failed bucket anymore — reject moves an item to draft.
+              </p>
+            </>
           )}
         </div>
         <div className="editor-header__actions">
@@ -243,8 +258,8 @@ export default function EditorPage() {
           {status === 'loading' && <p>Loading…</p>}
           {!drafts.length && status === 'ready' && (
             <p className="editor-empty">
-              No live articles awaiting review. New substantial SEO posts appear here with{' '}
-              <code>reviewed=false</code> while already on the site.
+              Queue is empty. New articles go public automatically; they stay in this list
+              until you click Mark reviewed.
             </p>
           )}
           <ul>
@@ -257,7 +272,8 @@ export default function EditorPage() {
                 >
                   <span className="editor-queue__title">{d.seo_title || d.source_title}</span>
                   <span className="editor-queue__meta">
-                    {d.reviewed ? 'Reviewed' : 'Not reviewed'}
+                    {d.reviewed ? 'Reviewed' : 'In queue'}
+                    {d.status === false ? ' · draft' : ''}
                     {d.revision_status && d.revision_status !== 'idle'
                       ? ` · ${d.revision_status}`
                       : ''}

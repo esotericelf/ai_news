@@ -1852,6 +1852,14 @@ button.article-share__btn {
   color: var(--text-muted);
 }
 
+.editor-header__legend {
+  margin: 0.35rem 0 0;
+  max-width: 42rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
 .editor-header__actions {
   display: flex;
   gap: 0.5rem;

@@ -9,7 +9,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticles } from '../store/slices/articlesSlice';
 import { loadTaxonomy } from '../store/slices/taxonomySlice';
 import { config, tagUrl } from '../config';
-import { filterDisplayableArticles } from '../utils/article';
+import { filterPublishedListArticles } from '../utils/article';
 
 export default function TagPage() {
   const { slug } = useParams();
@@ -50,7 +50,7 @@ export default function TagPage() {
         })}`
       : `${config.siteUrl}${path}`;
 
-  const ready = filterDisplayableArticles(list.filter((a) => a.status === 'ready'));
+  const ready = filterPublishedListArticles(list);
 
   return (
     <>

@@ -11,7 +11,7 @@ import SeoHead from '../seo/SeoHead';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticles } from '../store/slices/articlesSlice';
 import { config } from '../config';
-import { filterDisplayableArticles } from '../utils/article';
+import { filterPublishedListArticles } from '../utils/article';
 import { buildWebsiteJsonLd } from '../utils/seo';
 
 function buildHomeCanonical(siteUrl, { search, page }) {
@@ -35,7 +35,7 @@ export default function HomePage() {
     dispatch(loadArticles({ page, search }));
   }, [dispatch, page, search]);
 
-  const ready = filterDisplayableArticles(list.filter((a) => a.status === 'ready'));
+  const ready = filterPublishedListArticles(list);
   const lead = !search && page === 1 ? ready[0] : null;
 
   const pageTitle = search ? `Search: ${search}` : 'Latest AI News';
