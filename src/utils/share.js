@@ -1,5 +1,7 @@
 /** Share URLs for high-traffic platforms (opens in new tab). */
 
+const COMPACT_PLATFORM_IDS = ['x', 'facebook', 'linkedin', 'whatsapp'];
+
 export const SHARE_PLATFORMS = [
   {
     id: 'facebook',
@@ -52,6 +54,10 @@ export const SHARE_PLATFORMS = [
     },
   },
 ];
+
+export const SHARE_PLATFORMS_COMPACT = SHARE_PLATFORMS.filter((p) =>
+  COMPACT_PLATFORM_IDS.includes(p.id)
+);
 
 export function canUseNativeShare() {
   return (

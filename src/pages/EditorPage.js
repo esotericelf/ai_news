@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ArticleBody from '../features/articles/ArticleBody';
+import ArticleShareCompact from '../features/articles/ArticleShareCompact';
 import {
   approveDraft,
   fetchDraft,
@@ -9,7 +10,7 @@ import {
   rejectDraft,
   reviseDraft,
 } from '../api/editor';
-import { articleUrl } from '../config';
+import { absoluteArticleUrl, articleUrl } from '../config';
 import { useAuth } from '../features/auth/AuthContext';
 import EditorLogin from '../features/auth/EditorLogin';
 const STORAGE_KEY = 'ai_news_editor_key';
@@ -248,7 +249,7 @@ export default function EditorPage() {
           )}
           <ul>
             {drafts.map((d) => (
-              <li key={d.id}>
+              <li key={d.id} className="editor-queue__entry">
                 <button
                   type="button"
                   className={`editor-queue__item${selectedId === d.id ? ' editor-queue__item--active' : ''}`}
@@ -264,6 +265,17 @@ export default function EditorPage() {
                     {d.read_time_minutes} min
                   </span>
                 </button>
+                {d.slug ? (
+                  <Link
+                    to={articleUrl(d.slug)}
+                    className="editor-queue__live"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open live page in a new tab"
+                  >
+                    Live
+                  </Link>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -281,6 +293,16 @@ export default function EditorPage() {
                 >
                   ← Queue
                 </button>
+                {detail.slug && (
+                  <Link
+                    to={articleUrl(detail.slug)}
+                    className="editor-mobile-nav__live btn btn--ghost"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Live page
+                  </Link>
+                )}
                 {drafts.length > 1 && (
                   <label className="editor-mobile-nav__jump">
                     <span className="visually-hidden">Switch article</span>
@@ -341,6 +363,13 @@ export default function EditorPage() {
                   </p>
                   <h1>{detail.seo_title}</h1>
                   <p className="editor-article__meta">{detail.meta_description}</p>
+                  {detail.slug && (
+                    <ArticleShareCompact
+                      url={absoluteArticleUrl(detail.slug)}
+                      title={detail.seo_title}
+                      className="editor-article__share"
+                    />
+                  )}
                   {detail.error_message && (
                     <p className="editor-error editor-error--inline">{detail.error_message}</p>
                   )}
@@ -349,7 +378,14 @@ export default function EditorPage() {
                   </p>
                   {detail.slug && (
                     <p className="editor-preview__slug editor-preview__slug--inline">
-                      Live: <code>{articleUrl(detail.slug)}</code>
+                      <Link
+                        to={articleUrl(detail.slug)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        View live page
+                      </Link>
+                      <span className="editor-preview__slug-path">{articleUrl(detail.slug)}</span>
                     </p>
                   )}
                   <h2 className="editor-article__label">

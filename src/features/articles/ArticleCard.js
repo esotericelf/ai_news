@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { articleUrl } from '../../config';
+import { absoluteArticleUrl, articleUrl } from '../../config';
+import ArticleShareCompact from './ArticleShareCompact';
 import ArticleImage from '../../components/ui/ArticleImage';
 import { articleCategory, articleTitle } from '../../utils/article';
 import { formatRelativeDate } from '../../utils/format';
@@ -35,6 +36,13 @@ export default function ArticleCard({ article, variant = 'default' }) {
           </footer>
         </div>
       </Link>
+      {article.slug && (
+        <ArticleShareCompact
+          url={absoluteArticleUrl(article.slug)}
+          title={title}
+          className="story-card__share"
+        />
+      )}
     </article>
   );
 }

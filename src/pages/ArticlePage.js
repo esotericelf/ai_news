@@ -6,7 +6,7 @@ import ErrorState from '../components/ui/ErrorState';
 import Tag from '../components/ui/Tag';
 import ArticleBody from '../features/articles/ArticleBody';
 import ArticleMeta from '../features/articles/ArticleMeta';
-import ArticleShare from '../features/articles/ArticleShare';
+import ArticleShareCompact from '../features/articles/ArticleShareCompact';
 import RelatedArticles from '../features/articles/RelatedArticles';
 import JsonLd from '../seo/JsonLd';
 import SeoHead from '../seo/SeoHead';
@@ -102,6 +102,7 @@ export default function ArticlePage() {
               ))}
             </ul>
           )}
+          <ArticleShareCompact url={canonical} title={title} className="article-header__share" />
         </header>
 
         <figure className="article-figure">
@@ -115,8 +116,6 @@ export default function ArticlePage() {
         </figure>
 
         <ArticleBody html={article.body_html} />
-
-        <ArticleShare url={canonical} title={title} />
 
         <footer className="article-footer">
           <p className="article-footer__attribution">
