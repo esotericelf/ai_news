@@ -11,6 +11,8 @@ Editorial frontend for SEO-ready AI and technology articles from the [AI_News_Sc
 
 Backend scraping, LLM generation, and approval logic live in **AI_News_Scraper**, not this repo.
 
+**How to view logs, DB counts, editor stats, and API data:** see [AI_News_Scraper/docs/VIEWING_DATA.md](../AI_News_Scraper/docs/VIEWING_DATA.md).
+
 ## Local setup
 
 ```bash

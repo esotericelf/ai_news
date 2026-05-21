@@ -22,6 +22,19 @@ const PURIFY_CONFIG = {
 const BOILERPLATE_RE =
   /this article covers developments in artificial intelligence|this sponsored article is brought to you by/i;
 
+/** Affiliate CTAs belong in ArticlePartnerCta — not inside LLM body copy. */
+const PARTNER_HOST_RE = /customgpt\.ai/i;
+
+function unwrapPartnerAnchors(node) {
+  if (!node?.querySelectorAll) return;
+  node.querySelectorAll('a[href]').forEach((anchor) => {
+    if (PARTNER_HOST_RE.test(anchor.getAttribute('href') || '')) {
+      const text = document.createTextNode(anchor.textContent || '');
+      anchor.replaceWith(text);
+    }
+  });
+}
+
 function stripBoilerplateNodes(node) {
   if (!node?.childNodes) return;
   [...node.childNodes].forEach((child) => {
@@ -46,6 +59,7 @@ export default function ArticleBody({ html }) {
     RETURN_DOM: true,
   });
   stripBoilerplateNodes(clean);
+  unwrapPartnerAnchors(clean);
   const safeHtml = clean.innerHTML;
 
   return (

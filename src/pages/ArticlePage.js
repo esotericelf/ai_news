@@ -6,6 +6,7 @@ import ErrorState from '../components/ui/ErrorState';
 import Tag from '../components/ui/Tag';
 import ArticleBody from '../features/articles/ArticleBody';
 import ArticleMeta from '../features/articles/ArticleMeta';
+import ArticlePartnerCta from '../features/articles/ArticlePartnerCta';
 import ArticleSharePopover from '../features/articles/ArticleSharePopover';
 import RelatedArticles from '../features/articles/RelatedArticles';
 import JsonLd from '../seo/JsonLd';
@@ -116,6 +117,8 @@ export default function ArticlePage() {
         </figure>
 
         <ArticleBody html={article.body_html} />
+
+        <ArticlePartnerCta article={article} />
 
         <footer className="article-footer">
           <p className="article-footer__attribution">
