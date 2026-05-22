@@ -6,6 +6,9 @@ export function formatFirebaseAuthError(error) {
 
   const code = error.code || '';
   const hints = {
+    'auth/argument-error':
+      'Firebase Auth is misconfigured. Set REACT_APP_FIREBASE_AUTH_DOMAIN to ainewsrepo.firebaseapp.com, ' +
+      'include REACT_APP_FIREBASE_APP_ID in Netlify env, then redeploy. Clear site data for /editor if this persists.',
     'auth/internal-error':
       'Check Firebase Console: enable Google/GitHub under Authentication → Sign-in method. ' +
       'Add this site under Authentication → Settings → Authorized domains. ' +

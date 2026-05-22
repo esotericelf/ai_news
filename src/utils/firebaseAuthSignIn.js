@@ -41,9 +41,18 @@ export function signInGitHub(auth, setAuthError) {
   return signInWithProvider(auth, githubProvider(), setAuthError);
 }
 
-/** True when URL may be returning from Firebase OAuth redirect. */
+/** True when URL is returning from Firebase redirect OAuth (not arbitrary query params). */
 export function isFirebaseRedirectReturn() {
   if (typeof window === 'undefined') return false;
   const { search, hash } = window.location;
-  return /[?&#](state|code|error)=/.test(`${search}${hash}`);
+  const blob = `${search}${hash}`;
+  if (blob.includes('/__/auth/') || blob.includes('authType=')) {
+    return true;
+  }
+  return /[?&#](state|code|error)=/.test(blob);
+}
+
+export function clearFirebaseRedirectParams() {
+  if (typeof window === 'undefined') return;
+  window.history.replaceState(null, '', window.location.pathname);
 }

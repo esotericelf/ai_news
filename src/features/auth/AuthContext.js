@@ -1,9 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getRedirectResult, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth, isFirebaseAuthDomainValid, isFirebaseConfigured } from '../../firebase';
+import {
+  auth,
+  getFirebaseInitError,
+  isFirebaseAuthDomainValid,
+  isFirebaseConfigured,
+} from '../../firebase';
 import { setEditorTokenProvider } from '../../api/editor';
 import { formatFirebaseAuthError } from '../../utils/firebaseAuthErrors';
-import { isFirebaseRedirectReturn, signInGitHub, signInGoogle } from '../../utils/firebaseAuthSignIn';
+import {
+  clearFirebaseRedirectParams,
+  isFirebaseRedirectReturn,
+  signInGitHub,
+  signInGoogle,
+} from '../../utils/firebaseAuthSignIn';
 
 const AuthContext = createContext(null);
 
@@ -16,7 +26,11 @@ export function AuthProvider({ children }) {
   );
 
   useEffect(() => {
+    const initErr = getFirebaseInitError();
     if (!isFirebaseConfigured || !auth) {
+      if (initErr) {
+        setAuthError(initErr.message || 'Firebase failed to initialize.');
+      }
       setLoading(false);
       setFinishingRedirect(false);
       setEditorTokenProvider(null);
@@ -35,16 +49,15 @@ export function AuthProvider({ children }) {
     let active = true;
 
     (async () => {
-      if (isFirebaseRedirectReturn()) {
-        setFinishingRedirect(true);
+      const pendingRedirect = isFirebaseRedirectReturn();
+      if (!pendingRedirect) {
+        return;
       }
+      setFinishingRedirect(true);
       try {
         const result = await getRedirectResult(auth);
         if (active && result?.user) {
           setUser(result.user);
-        }
-        if (active && isFirebaseRedirectReturn()) {
-          window.history.replaceState(null, '', window.location.pathname);
         }
       } catch (err) {
         if (active && err?.code && err.code !== 'auth/no-auth-event') {
@@ -52,6 +65,7 @@ export function AuthProvider({ children }) {
         }
       } finally {
         if (active) {
+          clearFirebaseRedirectParams();
           setFinishingRedirect(false);
         }
       }

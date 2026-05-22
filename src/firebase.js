@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
 import {
   browserLocalPersistence,
-  indexedDBLocalPersistence,
+  browserPopupRedirectResolver,
+  getAuth,
   initializeAuth,
 } from 'firebase/auth';
 
@@ -18,6 +19,7 @@ const REQUIRED_FIREBASE_ENV = [
   ['apiKey', 'REACT_APP_FIREBASE_API_KEY'],
   ['authDomain', 'REACT_APP_FIREBASE_AUTH_DOMAIN'],
   ['projectId', 'REACT_APP_FIREBASE_PROJECT_ID'],
+  ['appId', 'REACT_APP_FIREBASE_APP_ID'],
 ];
 
 /** Which REACT_APP_FIREBASE_* vars were empty when this bundle was built (Netlify build-time). */
@@ -37,12 +39,27 @@ export function isFirebaseAuthDomainValid() {
 
 let app = null;
 let auth = null;
+let initError = null;
 
 if (isFirebaseConfigured) {
-  app = initializeApp(firebaseConfig);
-  auth = initializeAuth(app, {
-    persistence: [indexedDBLocalPersistence, browserLocalPersistence],
-  });
+  try {
+    app = initializeApp(firebaseConfig);
+    try {
+      auth = initializeAuth(app, {
+        persistence: browserLocalPersistence,
+        popupRedirectResolver: browserPopupRedirectResolver,
+      });
+    } catch (e) {
+      // Hot reload / second init: reuse existing Auth instance
+      auth = getAuth(app);
+    }
+  } catch (e) {
+    initError = e;
+  }
+}
+
+export function getFirebaseInitError() {
+  return initError;
 }
 
 export { app, auth };
