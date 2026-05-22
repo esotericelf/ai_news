@@ -12,7 +12,7 @@ The public site on **Netlify** sends defensive HTTP headers via [`netlify.toml`]
 | **X-Frame-Options: DENY** | Prevents clickjacking via iframes. |
 | **Referrer-Policy** | Sends only origin on cross-origin requests. |
 | **Permissions-Policy** | Disables camera, mic, geolocation, etc. (not used by this app). |
-| **Cross-Origin-Opener-Policy** | `same-origin-allow-popups` so Firebase Google/GitHub sign-in popups still work. |
+| **Cross-Origin-Opener-Policy** | `unsafe-none` on `/editor` only so Firebase/Google can close the OAuth popup without console warnings. Not set on the public site. |
 
 ### CSP notes
 
