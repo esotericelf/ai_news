@@ -45,11 +45,14 @@ export function signInGitHub(auth, setAuthError) {
 export function isFirebaseRedirectReturn() {
   if (typeof window === 'undefined') return false;
   const { search, hash } = window.location;
+  if (!search && !hash) return false;
   const blob = `${search}${hash}`;
-  if (blob.includes('/__/auth/') || blob.includes('authType=')) {
-    return true;
-  }
-  return /[?&#](state|code|error)=/.test(blob);
+  return (
+    blob.includes('/__/auth/') ||
+    blob.includes('authType=') ||
+    blob.includes('apiKey=') ||
+    /[?&#](state|code|error)=/i.test(blob)
+  );
 }
 
 export function clearFirebaseRedirectParams() {

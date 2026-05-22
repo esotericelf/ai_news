@@ -21,9 +21,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [authError, setAuthError] = useState('');
-  const [finishingRedirect, setFinishingRedirect] = useState(
-    () => isFirebaseConfigured && isFirebaseRedirectReturn()
-  );
 
   useEffect(() => {
     const initErr = getFirebaseInitError();
@@ -32,7 +29,6 @@ export function AuthProvider({ children }) {
         setAuthError(initErr.message || 'Firebase failed to initialize.');
       }
       setLoading(false);
-      setFinishingRedirect(false);
       setEditorTokenProvider(null);
       return undefined;
     }
@@ -42,41 +38,42 @@ export function AuthProvider({ children }) {
         'REACT_APP_FIREBASE_AUTH_DOMAIN must be your-project.firebaseapp.com (not the Netlify URL).'
       );
       setLoading(false);
-      setFinishingRedirect(false);
       return undefined;
     }
 
     let active = true;
+    let unsubscribe = () => {};
 
     (async () => {
-      const pendingRedirect = isFirebaseRedirectReturn();
-      if (!pendingRedirect) {
-        return;
-      }
-      setFinishingRedirect(true);
+      setLoading(true);
+      const returningFromOAuth = isFirebaseRedirectReturn();
+
       try {
+        // Must finish before onAuthStateChanged — otherwise null fires first and login reappears.
         const result = await getRedirectResult(auth);
         if (active && result?.user) {
           setUser(result.user);
+        } else if (active && auth.currentUser) {
+          setUser(auth.currentUser);
         }
       } catch (err) {
         if (active && err?.code && err.code !== 'auth/no-auth-event') {
           setAuthError(formatFirebaseAuthError(err));
         }
-      } finally {
-        if (active) {
-          clearFirebaseRedirectParams();
-          setFinishingRedirect(false);
-        }
       }
-    })();
 
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      if (active && returningFromOAuth) {
+        clearFirebaseRedirectParams();
+      }
+
       if (!active) return;
-      setUser(nextUser);
-      setLoading(false);
-      setFinishingRedirect(false);
-    });
+
+      unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+        if (!active) return;
+        setUser(nextUser);
+        setLoading(false);
+      });
+    })();
 
     return () => {
       active = false;
@@ -99,15 +96,8 @@ export function AuthProvider({ children }) {
     return () => setEditorTokenProvider(null);
   }, [getIdToken]);
 
-  const signInWithGoogle = useCallback(
-    () => signInGoogle(auth, setAuthError),
-    []
-  );
-
-  const signInWithGitHub = useCallback(
-    () => signInGitHub(auth, setAuthError),
-    []
-  );
+  const signInWithGoogle = useCallback(() => signInGoogle(auth, setAuthError), []);
+  const signInWithGitHub = useCallback(() => signInGitHub(auth, setAuthError), []);
 
   const signOut = useCallback(async () => {
     setAuthError('');
@@ -119,7 +109,7 @@ export function AuthProvider({ children }) {
   const value = useMemo(
     () => ({
       user,
-      loading: loading || finishingRedirect,
+      loading,
       authError,
       setAuthError,
       isFirebaseConfigured,
@@ -128,7 +118,7 @@ export function AuthProvider({ children }) {
       signOut,
       getIdToken,
     }),
-    [user, loading, finishingRedirect, authError, signInWithGoogle, signInWithGitHub, signOut, getIdToken]
+    [user, loading, authError, signInWithGoogle, signInWithGitHub, signOut, getIdToken]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

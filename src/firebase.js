@@ -1,10 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import {
-  browserLocalPersistence,
-  browserPopupRedirectResolver,
-  getAuth,
-  initializeAuth,
-} from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -22,7 +17,6 @@ const REQUIRED_FIREBASE_ENV = [
   ['appId', 'REACT_APP_FIREBASE_APP_ID'],
 ];
 
-/** Which REACT_APP_FIREBASE_* vars were empty when this bundle was built (Netlify build-time). */
 export function getMissingFirebaseEnv() {
   return REQUIRED_FIREBASE_ENV.filter(([key]) => !firebaseConfig[key]).map(
     ([, envName]) => envName
@@ -31,7 +25,6 @@ export function getMissingFirebaseEnv() {
 
 export const isFirebaseConfigured = getMissingFirebaseEnv().length === 0;
 
-/** authDomain must be *.firebaseapp.com (not your Netlify URL). */
 export function isFirebaseAuthDomainValid() {
   const domain = (firebaseConfig.authDomain || '').trim().toLowerCase();
   return domain.endsWith('.firebaseapp.com');
@@ -44,15 +37,7 @@ let initError = null;
 if (isFirebaseConfigured) {
   try {
     app = initializeApp(firebaseConfig);
-    try {
-      auth = initializeAuth(app, {
-        persistence: browserLocalPersistence,
-        popupRedirectResolver: browserPopupRedirectResolver,
-      });
-    } catch (e) {
-      // Hot reload / second init: reuse existing Auth instance
-      auth = getAuth(app);
-    }
+    auth = getAuth(app);
   } catch (e) {
     initError = e;
   }
