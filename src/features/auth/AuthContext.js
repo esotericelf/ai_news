@@ -10,6 +10,7 @@ import { setEditorTokenProvider } from '../../api/editor';
 import {
   bootstrapFirebaseAuth,
   formatBootstrapError,
+  publishAuthDebug,
 } from '../../utils/firebaseAuthBootstrap';
 import { signInGitHub, signInGoogle } from '../../utils/firebaseAuthSignIn';
 
@@ -53,6 +54,8 @@ export function AuthProvider({ children }) {
         if (active) {
           setAuthError(formatBootstrapError(err));
         }
+      } finally {
+        publishAuthDebug(auth);
       }
 
       if (!active) return;

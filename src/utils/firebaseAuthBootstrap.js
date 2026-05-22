@@ -2,23 +2,24 @@ import { getRedirectResult, onAuthStateChanged } from 'firebase/auth';
 import { formatFirebaseAuthError } from './firebaseAuthErrors';
 import { clearFirebaseRedirectParams, isFirebaseRedirectReturn } from './firebaseAuthSignIn';
 
-/** Survives React StrictMode remount (redirect result can only be consumed once). */
+/** OAuth redirect can only be consumed once; shared across StrictMode remounts. */
 let redirectResultPromise = null;
 
-export function getRedirectResultOnce(auth) {
+export function resetRedirectResultCache() {
+  redirectResultPromise = null;
+}
+
+function getRedirectResultOnce(auth) {
   if (!auth) {
     return Promise.resolve(null);
   }
   if (!redirectResultPromise) {
-    redirectResultPromise = getRedirectResult(auth).catch((err) => {
-      redirectResultPromise = null;
-      throw err;
-    });
+    redirectResultPromise = getRedirectResult(auth);
   }
   return redirectResultPromise;
 }
 
-function waitForAuthUser(auth, maxMs = 5000) {
+function waitForAuthUser(auth, maxMs) {
   if (auth.currentUser) {
     return Promise.resolve(auth.currentUser);
   }
@@ -44,21 +45,37 @@ function waitForAuthUser(auth, maxMs = 5000) {
 export async function bootstrapFirebaseAuth(auth) {
   const returning = isFirebaseRedirectReturn();
   let redirectError = null;
+  let result = null;
+
+  if (!returning) {
+    resetRedirectResultCache();
+    const existing = auth.currentUser || (await waitForAuthUser(auth, 2000));
+    return existing;
+  }
 
   try {
-    await getRedirectResultOnce(auth);
+    result = await getRedirectResultOnce(auth);
   } catch (err) {
     if (err?.code && err.code !== 'auth/no-auth-event') {
       redirectError = err;
     }
+  } finally {
+    setTimeout(() => resetRedirectResultCache(), 3000);
   }
 
-  let user = auth.currentUser;
+  let user = result?.user || auth.currentUser;
   if (!user) {
-    user = await waitForAuthUser(auth, returning ? 6000 : 1500);
+    user = await waitForAuthUser(auth, 8000);
   }
 
-  if (returning) {
+  if (user) {
+    try {
+      await user.getIdToken(true);
+    } catch {
+      /* token optional for state */
+    }
+    clearFirebaseRedirectParams();
+  } else if (returning) {
     clearFirebaseRedirectParams();
   }
 
@@ -68,7 +85,9 @@ export async function bootstrapFirebaseAuth(auth) {
 
   if (returning && !user) {
     const err = new Error(
-      'Sign-in returned but no session was saved. Turn off strict tracking protection / ad blockers for this site, or try Chrome without extensions.'
+      'Google/GitHub sent you back but this browser did not keep the Firebase session. ' +
+        'Allow third-party cookies for ainewsrepo.netlify.app, disable strict tracking protection, ' +
+        'or use API key login below.'
     );
     err.code = 'auth/redirect-session-missing';
     throw err;
@@ -82,4 +101,15 @@ export function formatBootstrapError(err) {
     return err.message;
   }
   return formatFirebaseAuthError(err);
+}
+
+/** Console: __ainewsAuthDebug() after page load */
+export function publishAuthDebug(auth) {
+  if (typeof window === 'undefined' || !auth) return;
+  window.__ainewsAuthDebug = () => ({
+    email: auth.currentUser?.email ?? null,
+    uid: auth.currentUser?.uid ?? null,
+    redirectPending: isFirebaseRedirectReturn(),
+    href: window.location.href,
+  });
 }

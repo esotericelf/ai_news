@@ -2007,6 +2007,17 @@ button.article-share__btn {
   color: var(--text-muted);
 }
 
+.editor-auth__hint {
+  margin: var(--space-md) 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.editor-auth__hint code {
+  font-size: 0.7rem;
+}
+
 .editor-auth__row {
   display: flex;
   gap: 0.5rem;

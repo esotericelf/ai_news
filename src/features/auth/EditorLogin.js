@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import SeoHead from '../../seo/SeoHead';
 import { getMissingFirebaseEnv, isFirebaseConfigured } from '../../firebase';
 import EditorOAuthButtons from './EditorOAuthButtons';
+import { useAuth } from './AuthContext';
 
 export default function EditorLogin({ onApiKeyLogin }) {
+  const { authError } = useAuth();
   const [showApiKey, setShowApiKey] = useState(false);
   const [keyInput, setKeyInput] = useState('');
 
@@ -50,6 +52,13 @@ export default function EditorLogin({ onApiKeyLogin }) {
       <div className="editor-auth">
         <h1 className="editor-auth__title">Editor Login</h1>
         <EditorOAuthButtons />
+
+        {authError ? (
+          <p className="editor-auth__hint">
+            Debug: run <code>__ainewsAuthDebug()</code> in the console (use{' '}
+            <code>?.email</code> with two dots). Or sign in with <strong>API key</strong> below.
+          </p>
+        ) : null}
 
         {onApiKeyLogin && (
           <>
