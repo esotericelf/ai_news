@@ -19,7 +19,7 @@ The public site on **Netlify** sends defensive HTTP headers via [`netlify.toml`]
 - **Images** use `img-src https:` so article heroes can load from any publisher origin.
 - **API** uses `connect-src https:` so `REACT_APP_API_BASE_URL` can be ngrok or any HTTPS host without redeploying headers.
 - **Google Analytics** is allowed via `script-src` / `connect-src` to Google domains.
-- **Firebase editor** auth uses **full-page redirect** (no OAuth popup), so `gapi` / `window.close` COOP warnings do not apply. `connect-src https:` covers Firebase/Google API calls.
+- **Firebase editor** auth uses **full-page redirect** (no OAuth popup). Firebase still loads a hidden `__/auth/iframe` on `*.firebaseapp.com` — `frame-src` must include `'self'` and `https://ainewsrepo.firebaseapp.com` (see `netlify.toml`). If you see `chrome-error://chromewebdata/`, redeploy CSP changes and disable ad blockers for `firebaseapp.com`.
 
 If `/editor` sign-in shows `auth/internal-error`, add your hostname to Firebase **Authorized domains** and redeploy Netlify after env vars are set.
 
