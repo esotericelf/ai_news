@@ -2017,28 +2017,27 @@ button.article-share__btn {
   color: var(--accent);
 }
 
-.editor-auth--firebaseui {
-  max-width: 22rem;
-}
-
-.editor-firebaseui {
-  margin: var(--space-md) 0 var(--space-lg);
-}
-
-/* FirebaseUI default card — keep readable on our background */
-.editor-firebaseui .firebaseui-container {
-  max-width: 100%;
-}
-
-.editor-firebaseui .firebaseui-card-content {
-  padding: 0;
-}
-
 .editor-auth__providers {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  margin: var(--space-lg) 0;
+  margin: 0;
+}
+
+.editor-auth__providers .editor-error {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.editor-auth__back {
+  display: inline-block;
+  margin-top: var(--space-lg);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.editor-page--loading {
+  min-height: 40vh;
 }
 
 .editor-auth__toggle {

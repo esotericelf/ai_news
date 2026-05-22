@@ -4,7 +4,7 @@ import {
   GoogleAuthProvider,
   getRedirectResult,
   onAuthStateChanged,
-  signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../../firebase';
@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
     }
     setAuthError('');
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      await signInWithRedirect(auth, new GoogleAuthProvider());
     } catch (err) {
       setAuthError(formatFirebaseAuthError(err));
       throw err;
@@ -72,7 +72,7 @@ export function AuthProvider({ children }) {
     }
     setAuthError('');
     try {
-      await signInWithPopup(auth, new GithubAuthProvider());
+      await signInWithRedirect(auth, new GithubAuthProvider());
     } catch (err) {
       setAuthError(formatFirebaseAuthError(err));
       throw err;

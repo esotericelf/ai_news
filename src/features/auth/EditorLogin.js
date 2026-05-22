@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from './AuthContext';
-import EditorFirebaseUi from './EditorFirebaseUi';
+import SeoHead from '../../seo/SeoHead';
 import { getMissingFirebaseEnv, isFirebaseConfigured } from '../../firebase';
+import EditorOAuthButtons from './EditorOAuthButtons';
 
 export default function EditorLogin({ onApiKeyLogin }) {
-  const { authError } = useAuth();
   const [showApiKey, setShowApiKey] = useState(false);
   const [keyInput, setKeyInput] = useState('');
 
@@ -13,13 +12,8 @@ export default function EditorLogin({ onApiKeyLogin }) {
     const missing = getMissingFirebaseEnv();
     return (
       <div className="editor-page">
+        <SeoHead title="Editor" noindex />
         <div className="editor-auth">
-          <h1>Editor — admin login</h1>
-          <p>
-            Firebase is not active in this deploy. Set the missing Netlify environment variables,
-            then <strong>clear cache and redeploy</strong> (Create React App bakes env in at build
-            time).
-          </p>
           {missing.length > 0 && (
             <ul className="editor-auth__missing">
               {missing.map((name) => (
@@ -34,17 +28,16 @@ export default function EditorLogin({ onApiKeyLogin }) {
               type="password"
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}
-              placeholder="Same value as AI_News_Scraper API_KEY"
+              placeholder="API key"
               autoComplete="off"
             />
             <button type="button" onClick={() => onApiKeyLogin?.(keyInput.trim())}>
               Sign in
             </button>
           </div>
-          <p className="editor-auth__hint">
-            Paste the <code>API_KEY</code> from <code>AI_News_Scraper/.env</code> (not your email).
-          </p>
-          <Link to="/">← Back to site</Link>
+          <Link className="editor-auth__back" to="/">
+            ← Home
+          </Link>
         </div>
       </div>
     );
@@ -52,21 +45,9 @@ export default function EditorLogin({ onApiKeyLogin }) {
 
   return (
     <div className="editor-page">
-      <div className="editor-auth editor-auth--firebaseui">
-        <h1>Editor — sign in</h1>
-        <p className="editor-auth__hint">
-          Choose Google or GitHub — you will be redirected back after sign-in. Your email must
-          be in <code>EDITOR_ALLOWED_EMAILS</code> on the API.
-        </p>
-        <p className="editor-auth__hint editor-auth__hint--domain">
-          Firebase must allow this hostname:{' '}
-          <code>{typeof window !== 'undefined' ? window.location.hostname : 'localhost'}</code>{' '}
-          (Authentication → Settings → Authorized domains).
-        </p>
-
-        <EditorFirebaseUi />
-
-        {authError && <p className="editor-error">{authError}</p>}
+      <SeoHead title="Editor" noindex />
+      <div className="editor-auth">
+        <EditorOAuthButtons />
 
         {onApiKeyLogin && (
           <>
@@ -75,7 +56,7 @@ export default function EditorLogin({ onApiKeyLogin }) {
               className="btn btn--ghost editor-auth__toggle"
               onClick={() => setShowApiKey((v) => !v)}
             >
-              {showApiKey ? 'Hide API key login' : 'Use API key instead (dev)'}
+              {showApiKey ? 'Hide API key' : 'API key'}
             </button>
             {showApiKey && (
               <div className="editor-auth__row">
@@ -83,7 +64,7 @@ export default function EditorLogin({ onApiKeyLogin }) {
                   type="password"
                   value={keyInput}
                   onChange={(e) => setKeyInput(e.target.value)}
-                  placeholder="API_KEY from AI_News_Scraper/.env"
+                  placeholder="API key"
                   autoComplete="off"
                 />
                 <button type="button" onClick={() => onApiKeyLogin(keyInput.trim())}>
@@ -94,7 +75,9 @@ export default function EditorLogin({ onApiKeyLogin }) {
           </>
         )}
 
-        <Link to="/">← Back to site</Link>
+        <Link className="editor-auth__back" to="/">
+          ← Home
+        </Link>
       </div>
     </div>
   );
