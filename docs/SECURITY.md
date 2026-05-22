@@ -12,14 +12,14 @@ The public site on **Netlify** sends defensive HTTP headers via [`netlify.toml`]
 | **X-Frame-Options: DENY** | Prevents clickjacking via iframes. |
 | **Referrer-Policy** | Sends only origin on cross-origin requests. |
 | **Permissions-Policy** | Disables camera, mic, geolocation, etc. (not used by this app). |
-| **Cross-Origin-Opener-Policy** | `unsafe-none` on `/editor` only so Firebase/Google can close the OAuth popup without console warnings. Not set on the public site. |
+| **Cross-Origin-Opener-Policy** | Not set (editor uses redirect sign-in, not popups). |
 
 ### CSP notes
 
 - **Images** use `img-src https:` so article heroes can load from any publisher origin.
 - **API** uses `connect-src https:` so `REACT_APP_API_BASE_URL` can be ngrok or any HTTPS host without redeploying headers.
 - **Google Analytics** is allowed via `script-src` / `connect-src` to Google domains.
-- **Firebase editor** auth requires `script-src` and **`script-src-elem`** for `https://apis.google.com` and `https://www.gstatic.com`. `frame-src` covers Google/GitHub/Firebase popups; `connect-src https:` covers API calls. Sign-in uses a **popup** first, then full-page redirect if the popup is blocked.
+- **Firebase editor** auth uses **full-page redirect** (no OAuth popup), so `gapi` / `window.close` COOP warnings do not apply. `connect-src https:` covers Firebase/Google API calls.
 
 If `/editor` sign-in shows `auth/internal-error`, add your hostname to Firebase **Authorized domains** and redeploy Netlify after env vars are set.
 

@@ -1,31 +1,32 @@
 import {
   GithubAuthProvider,
   GoogleAuthProvider,
-  signInWithPopup,
   signInWithRedirect,
 } from 'firebase/auth';
 import { formatFirebaseAuthError } from './firebaseAuthErrors';
 
-const POPUP_FALLBACK_CODES = new Set([
-  'auth/popup-blocked',
-  'auth/popup-closed-by-user',
-  'auth/cancelled-popup-request',
-]);
+function googleProvider() {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  return provider;
+}
 
+function githubProvider() {
+  return new GithubAuthProvider();
+}
+
+/**
+ * Full-page OAuth redirect (no popup). Avoids COOP / window.close console noise
+ * and shows the provider account picker in the main tab.
+ */
 async function signInWithProvider(auth, provider, setAuthError) {
   if (!auth) {
     throw new Error('Firebase is not configured');
   }
   setAuthError('');
   try {
-    await signInWithPopup(auth, provider);
+    await signInWithRedirect(auth, provider);
   } catch (err) {
-    const code = err?.code || '';
-    if (POPUP_FALLBACK_CODES.has(code)) {
-      setAuthError('Opening full-page sign-in…');
-      await signInWithRedirect(auth, provider);
-      return;
-    }
     const message = formatFirebaseAuthError(err);
     setAuthError(message);
     throw err;
@@ -33,11 +34,11 @@ async function signInWithProvider(auth, provider, setAuthError) {
 }
 
 export function signInGoogle(auth, setAuthError) {
-  return signInWithProvider(auth, new GoogleAuthProvider(), setAuthError);
+  return signInWithProvider(auth, googleProvider(), setAuthError);
 }
 
 export function signInGitHub(auth, setAuthError) {
-  return signInWithProvider(auth, new GithubAuthProvider(), setAuthError);
+  return signInWithProvider(auth, githubProvider(), setAuthError);
 }
 
 /** True when URL may be returning from Firebase OAuth redirect. */

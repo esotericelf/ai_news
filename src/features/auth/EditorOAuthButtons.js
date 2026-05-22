@@ -33,7 +33,7 @@ export default function EditorOAuthButtons() {
         disabled={!!busy}
       >
         <GoogleIcon className="btn--oauth__icon" />
-        <span>{busy === 'google' ? 'Signing in…' : 'Continue with Google'}</span>
+        <span>{busy === 'google' ? 'Redirecting to Google…' : 'Continue with Google'}</span>
       </button>
       <button
         type="button"
@@ -42,7 +42,7 @@ export default function EditorOAuthButtons() {
         disabled={!!busy}
       >
         <GitHubIcon className="btn--oauth__icon" />
-        <span>{busy === 'github' ? 'Signing in…' : 'Continue with GitHub'}</span>
+        <span>{busy === 'github' ? 'Redirecting to GitHub…' : 'Continue with GitHub'}</span>
       </button>
       {authError ? <p className="editor-error">{authError}</p> : null}
     </div>

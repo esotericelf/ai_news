@@ -43,6 +43,9 @@ export function AuthProvider({ children }) {
         if (active && result?.user) {
           setUser(result.user);
         }
+        if (active && isFirebaseRedirectReturn()) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
       } catch (err) {
         if (active && err?.code && err.code !== 'auth/no-auth-event') {
           setAuthError(formatFirebaseAuthError(err));
