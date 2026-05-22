@@ -1,6 +1,6 @@
 # Security headers (frontend)
 
-The public site on **Netlify** sends defensive HTTP headers via [`public/_headers`](../public/_headers). They are copied into `build/` on `npm run build` and applied to every path.
+The public site on **Netlify** sends defensive HTTP headers via [`netlify.toml`](../netlify.toml) (`[[headers]]` for CSP) and [`public/_headers`](../public/_headers) (other headers). **Redeploy Netlify** after any CSP change — the live site keeps the old policy until then.
 
 ## Headers
 
@@ -19,7 +19,9 @@ The public site on **Netlify** sends defensive HTTP headers via [`public/_header
 - **Images** use `img-src https:` so article heroes can load from any publisher origin.
 - **API** uses `connect-src https:` so `REACT_APP_API_BASE_URL` can be ngrok or any HTTPS host without redeploying headers.
 - **Google Analytics** is allowed via `script-src` / `connect-src` to Google domains.
-- **Firebase editor** auth uses `frame-src` for Google/GitHub and `connect-src` for Firebase/Google APIs.
+- **Firebase editor** auth requires `script-src` and **`script-src-elem`** for `https://apis.google.com` and `https://www.gstatic.com` (Google loads `api.js` dynamically). `frame-src` covers Google/GitHub/Firebase; `connect-src https:` covers API calls.
+
+If `/editor` sign-in shows `auth/internal-error`, add your hostname to Firebase **Authorized domains** and redeploy Netlify after env vars are set.
 
 If a new third-party script is added, update `_headers` and redeploy Netlify.
 

@@ -55,8 +55,13 @@ export default function EditorLogin({ onApiKeyLogin }) {
       <div className="editor-auth editor-auth--firebaseui">
         <h1>Editor — sign in</h1>
         <p className="editor-auth__hint">
-          Choose Google or GitHub (Firebase sign-in). Your email must be in{' '}
-          <code>EDITOR_ALLOWED_EMAILS</code> on the API.
+          Choose Google or GitHub — you will be redirected back after sign-in. Your email must
+          be in <code>EDITOR_ALLOWED_EMAILS</code> on the API.
+        </p>
+        <p className="editor-auth__hint editor-auth__hint--domain">
+          Firebase must allow this hostname:{' '}
+          <code>{typeof window !== 'undefined' ? window.location.hostname : 'localhost'}</code>{' '}
+          (Authentication → Settings → Authorized domains).
         </p>
 
         <EditorFirebaseUi />

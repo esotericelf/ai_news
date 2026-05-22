@@ -2,12 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import {
   GithubAuthProvider,
   GoogleAuthProvider,
+  getRedirectResult,
   onAuthStateChanged,
   signInWithPopup,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../../firebase';
 import { setEditorTokenProvider } from '../../api/editor';
+import { formatFirebaseAuthError } from '../../utils/firebaseAuthErrors';
 
 const AuthContext = createContext(null);
 
@@ -22,6 +24,12 @@ export function AuthProvider({ children }) {
       setEditorTokenProvider(null);
       return undefined;
     }
+
+    getRedirectResult(auth).catch((err) => {
+      if (err?.code && err.code !== 'auth/no-auth-event') {
+        setAuthError(formatFirebaseAuthError(err));
+      }
+    });
 
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
@@ -53,7 +61,7 @@ export function AuthProvider({ children }) {
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
     } catch (err) {
-      setAuthError(err.message || 'Google sign-in failed');
+      setAuthError(formatFirebaseAuthError(err));
       throw err;
     }
   }, []);
@@ -66,7 +74,7 @@ export function AuthProvider({ children }) {
     try {
       await signInWithPopup(auth, new GithubAuthProvider());
     } catch (err) {
-      setAuthError(err.message || 'GitHub sign-in failed');
+      setAuthError(formatFirebaseAuthError(err));
       throw err;
     }
   }, []);
