@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GitHubIcon, GoogleIcon } from '../../components/icons/OAuthProviderIcons';
 import { useAuth } from './AuthContext';
 
 export default function EditorOAuthButtons() {
@@ -31,7 +32,8 @@ export default function EditorOAuthButtons() {
         onClick={onGoogle}
         disabled={!!busy}
       >
-        {busy === 'google' ? 'Redirecting…' : 'Continue with Google'}
+        <GoogleIcon className="btn--oauth__icon" />
+        <span>{busy === 'google' ? 'Signing in…' : 'Continue with Google'}</span>
       </button>
       <button
         type="button"
@@ -39,7 +41,8 @@ export default function EditorOAuthButtons() {
         onClick={onGitHub}
         disabled={!!busy}
       >
-        {busy === 'github' ? 'Redirecting…' : 'Continue with GitHub'}
+        <GitHubIcon className="btn--oauth__icon" />
+        <span>{busy === 'github' ? 'Signing in…' : 'Continue with GitHub'}</span>
       </button>
       {authError ? <p className="editor-error">{authError}</p> : null}
     </div>

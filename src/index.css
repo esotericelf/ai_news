@@ -1992,6 +1992,21 @@ button.article-share__btn {
   border: 1px solid var(--border-strong);
 }
 
+.editor-auth__title {
+  margin: 0 0 var(--space-lg);
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.editor-auth__status {
+  margin: 0;
+  text-align: center;
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+}
+
 .editor-auth__row {
   display: flex;
   gap: 0.5rem;
@@ -2051,12 +2066,20 @@ button.article-share__btn {
 }
 
 .btn--oauth {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
   width: 100%;
   padding: 0.65rem 1rem;
   font-weight: 600;
   border: 1px solid var(--border-strong);
   cursor: pointer;
   font: inherit;
+}
+
+.btn--oauth__icon {
+  flex-shrink: 0;
 }
 
 .btn--google {

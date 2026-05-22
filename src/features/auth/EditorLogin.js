@@ -12,8 +12,9 @@ export default function EditorLogin({ onApiKeyLogin }) {
     const missing = getMissingFirebaseEnv();
     return (
       <div className="editor-page">
-        <SeoHead title="Editor" noindex />
+        <SeoHead title="Editor Login" noindex />
         <div className="editor-auth">
+          <h1 className="editor-auth__title">Editor Login</h1>
           {missing.length > 0 && (
             <ul className="editor-auth__missing">
               {missing.map((name) => (
@@ -45,8 +46,9 @@ export default function EditorLogin({ onApiKeyLogin }) {
 
   return (
     <div className="editor-page">
-      <SeoHead title="Editor" noindex />
+      <SeoHead title="Editor Login" noindex />
       <div className="editor-auth">
+        <h1 className="editor-auth__title">Editor Login</h1>
         <EditorOAuthButtons />
 
         {onApiKeyLogin && (

@@ -196,7 +196,14 @@ export default function EditorPage() {
 
   if (authLoading) {
     return (
-      <div className="editor-page editor-page--loading" aria-busy="true" aria-label="Loading" />
+      <div className="editor-page">
+        <div className="editor-auth">
+          <h1 className="editor-auth__title">Editor Login</h1>
+          <p className="editor-auth__status" aria-live="polite">
+            Completing sign-in…
+          </p>
+        </div>
+      </div>
     );
   }
 

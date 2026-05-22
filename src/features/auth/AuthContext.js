@@ -1,15 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import {
-  GithubAuthProvider,
-  GoogleAuthProvider,
-  getRedirectResult,
-  onAuthStateChanged,
-  signInWithRedirect,
-  signOut as firebaseSignOut,
-} from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '../../firebase';
+import { getRedirectResult, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { auth, isFirebaseAuthDomainValid, isFirebaseConfigured } from '../../firebase';
 import { setEditorTokenProvider } from '../../api/editor';
 import { formatFirebaseAuthError } from '../../utils/firebaseAuthErrors';
+import { isFirebaseRedirectReturn, signInGitHub, signInGoogle } from '../../utils/firebaseAuthSignIn';
 
 const AuthContext = createContext(null);
 
@@ -17,25 +11,60 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [authError, setAuthError] = useState('');
+  const [finishingRedirect, setFinishingRedirect] = useState(
+    () => isFirebaseConfigured && isFirebaseRedirectReturn()
+  );
 
   useEffect(() => {
     if (!isFirebaseConfigured || !auth) {
       setLoading(false);
+      setFinishingRedirect(false);
       setEditorTokenProvider(null);
       return undefined;
     }
 
-    getRedirectResult(auth).catch((err) => {
-      if (err?.code && err.code !== 'auth/no-auth-event') {
-        setAuthError(formatFirebaseAuthError(err));
+    if (!isFirebaseAuthDomainValid()) {
+      setAuthError(
+        'REACT_APP_FIREBASE_AUTH_DOMAIN must be your-project.firebaseapp.com (not the Netlify URL).'
+      );
+      setLoading(false);
+      setFinishingRedirect(false);
+      return undefined;
+    }
+
+    let active = true;
+
+    (async () => {
+      if (isFirebaseRedirectReturn()) {
+        setFinishingRedirect(true);
       }
-    });
+      try {
+        const result = await getRedirectResult(auth);
+        if (active && result?.user) {
+          setUser(result.user);
+        }
+      } catch (err) {
+        if (active && err?.code && err.code !== 'auth/no-auth-event') {
+          setAuthError(formatFirebaseAuthError(err));
+        }
+      } finally {
+        if (active) {
+          setFinishingRedirect(false);
+        }
+      }
+    })();
 
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      if (!active) return;
       setUser(nextUser);
       setLoading(false);
+      setFinishingRedirect(false);
     });
-    return unsubscribe;
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   const getIdToken = useCallback(async () => {
@@ -53,31 +82,15 @@ export function AuthProvider({ children }) {
     return () => setEditorTokenProvider(null);
   }, [getIdToken]);
 
-  const signInWithGoogle = useCallback(async () => {
-    if (!auth) {
-      throw new Error('Firebase is not configured');
-    }
-    setAuthError('');
-    try {
-      await signInWithRedirect(auth, new GoogleAuthProvider());
-    } catch (err) {
-      setAuthError(formatFirebaseAuthError(err));
-      throw err;
-    }
-  }, []);
+  const signInWithGoogle = useCallback(
+    () => signInGoogle(auth, setAuthError),
+    []
+  );
 
-  const signInWithGitHub = useCallback(async () => {
-    if (!auth) {
-      throw new Error('Firebase is not configured');
-    }
-    setAuthError('');
-    try {
-      await signInWithRedirect(auth, new GithubAuthProvider());
-    } catch (err) {
-      setAuthError(formatFirebaseAuthError(err));
-      throw err;
-    }
-  }, []);
+  const signInWithGitHub = useCallback(
+    () => signInGitHub(auth, setAuthError),
+    []
+  );
 
   const signOut = useCallback(async () => {
     setAuthError('');
@@ -89,7 +102,7 @@ export function AuthProvider({ children }) {
   const value = useMemo(
     () => ({
       user,
-      loading,
+      loading: loading || finishingRedirect,
       authError,
       setAuthError,
       isFirebaseConfigured,
@@ -98,7 +111,7 @@ export function AuthProvider({ children }) {
       signOut,
       getIdToken,
     }),
-    [user, loading, authError, signInWithGoogle, signInWithGitHub, signOut, getIdToken]
+    [user, loading, finishingRedirect, authError, signInWithGoogle, signInWithGitHub, signOut, getIdToken]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

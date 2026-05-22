@@ -25,6 +25,12 @@ export function getMissingFirebaseEnv() {
 
 export const isFirebaseConfigured = getMissingFirebaseEnv().length === 0;
 
+/** authDomain must be *.firebaseapp.com (not your Netlify URL). */
+export function isFirebaseAuthDomainValid() {
+  const domain = (firebaseConfig.authDomain || '').trim().toLowerCase();
+  return domain.endsWith('.firebaseapp.com');
+}
+
 let app = null;
 let auth = null;
 
