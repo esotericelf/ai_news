@@ -1,8 +1,11 @@
 import { getRedirectResult, onAuthStateChanged } from 'firebase/auth';
+import {
+  loadEditorFirebaseSession,
+  saveEditorFirebaseSession,
+} from './editorFirebaseSession';
 import { formatFirebaseAuthError } from './firebaseAuthErrors';
 import { clearFirebaseRedirectParams, isFirebaseRedirectReturn } from './firebaseAuthSignIn';
 
-/** OAuth redirect can only be consumed once; shared across StrictMode remounts. */
 let redirectResultPromise = null;
 
 export function resetRedirectResultCache() {
@@ -39,6 +42,16 @@ function waitForAuthUser(auth, maxMs) {
   });
 }
 
+async function persistUserSession(user) {
+  if (!user) return;
+  try {
+    await user.getIdToken(true);
+    await saveEditorFirebaseSession(user);
+  } catch {
+    /* best effort */
+  }
+}
+
 /**
  * Complete OAuth redirect and resolve a Firebase user (or null).
  */
@@ -50,6 +63,9 @@ export async function bootstrapFirebaseAuth(auth) {
   if (!returning) {
     resetRedirectResultCache();
     const existing = auth.currentUser || (await waitForAuthUser(auth, 2000));
+    if (existing) {
+      await persistUserSession(existing);
+    }
     return existing;
   }
 
@@ -69,11 +85,7 @@ export async function bootstrapFirebaseAuth(auth) {
   }
 
   if (user) {
-    try {
-      await user.getIdToken(true);
-    } catch {
-      /* token optional for state */
-    }
+    await persistUserSession(user);
     clearFirebaseRedirectParams();
   } else if (returning) {
     clearFirebaseRedirectParams();
@@ -85,9 +97,8 @@ export async function bootstrapFirebaseAuth(auth) {
 
   if (returning && !user) {
     const err = new Error(
-      'Google/GitHub sent you back but this browser did not keep the Firebase session. ' +
-        'Allow third-party cookies for ainewsrepo.netlify.app, disable strict tracking protection, ' +
-        'or use API key login below.'
+      'Google/GitHub returned but no Firebase user was attached. Try API key login, another browser, ' +
+        'or allow third-party cookies for firebaseapp.com.'
     );
     err.code = 'auth/redirect-session-missing';
     throw err;
@@ -103,13 +114,14 @@ export function formatBootstrapError(err) {
   return formatFirebaseAuthError(err);
 }
 
-/** Console: __ainewsAuthDebug() after page load */
 export function publishAuthDebug(auth) {
-  if (typeof window === 'undefined' || !auth) return;
+  if (typeof window === 'undefined') return;
+  const stored = loadEditorFirebaseSession();
   window.__ainewsAuthDebug = () => ({
-    email: auth.currentUser?.email ?? null,
-    uid: auth.currentUser?.uid ?? null,
+    email: auth?.currentUser?.email ?? stored?.email ?? null,
+    uid: auth?.currentUser?.uid ?? (stored ? 'sessionStorage' : null),
     redirectPending: isFirebaseRedirectReturn(),
+    sessionStorageEmail: stored?.email ?? null,
     href: window.location.href,
   });
 }

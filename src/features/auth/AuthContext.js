@@ -8,6 +8,12 @@ import {
 } from '../../firebase';
 import { setEditorTokenProvider } from '../../api/editor';
 import {
+  clearEditorFirebaseSession,
+  loadEditorFirebaseSession,
+  saveEditorFirebaseSession,
+  sessionAsUser,
+} from '../../utils/editorFirebaseSession';
+import {
   bootstrapFirebaseAuth,
   formatBootstrapError,
   publishAuthDebug,
@@ -18,8 +24,14 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [sessionUser, setSessionUser] = useState(() => {
+    const s = loadEditorFirebaseSession();
+    return s ? sessionAsUser(s) : null;
+  });
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [authError, setAuthError] = useState('');
+
+  const effectiveUser = user || sessionUser;
 
   useEffect(() => {
     const initErr = getFirebaseInitError();
@@ -49,10 +61,22 @@ export function AuthProvider({ children }) {
         const resolved = await bootstrapFirebaseAuth(auth);
         if (active && resolved) {
           setUser(resolved);
+          setSessionUser(null);
+        } else if (active) {
+          const stored = loadEditorFirebaseSession();
+          if (stored) {
+            setSessionUser(sessionAsUser(stored));
+          }
         }
       } catch (err) {
         if (active) {
-          setAuthError(formatBootstrapError(err));
+          const stored = loadEditorFirebaseSession();
+          if (stored) {
+            setSessionUser(sessionAsUser(stored));
+            setAuthError('');
+          } else {
+            setAuthError(formatBootstrapError(err));
+          }
         }
       } finally {
         publishAuthDebug(auth);
@@ -60,12 +84,15 @@ export function AuthProvider({ children }) {
 
       if (!active) return;
 
-      unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
         if (!active) return;
         if (nextUser) {
           setUser(nextUser);
-        } else if (!auth.currentUser) {
+          setSessionUser(null);
+          await saveEditorFirebaseSession(nextUser);
+        } else if (!auth.currentUser && !loadEditorFirebaseSession()) {
           setUser(null);
+          setSessionUser(null);
         }
         setLoading(false);
       });
@@ -78,9 +105,15 @@ export function AuthProvider({ children }) {
   }, []);
 
   const getIdToken = useCallback(async () => {
-    const active = user || auth?.currentUser;
-    if (!active) return null;
-    return active.getIdToken();
+    if (user || auth?.currentUser) {
+      const active = user || auth.currentUser;
+      return active.getIdToken();
+    }
+    const stored = loadEditorFirebaseSession();
+    if (stored?.token) {
+      return stored.token;
+    }
+    return null;
   }, [user]);
 
   useEffect(() => {
@@ -97,6 +130,8 @@ export function AuthProvider({ children }) {
 
   const signOut = useCallback(async () => {
     setAuthError('');
+    clearEditorFirebaseSession();
+    setSessionUser(null);
     if (auth) {
       await firebaseSignOut(auth);
       setUser(null);
@@ -105,7 +140,7 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => ({
-      user,
+      user: effectiveUser,
       loading,
       authError,
       setAuthError,
@@ -115,7 +150,15 @@ export function AuthProvider({ children }) {
       signOut,
       getIdToken,
     }),
-    [user, loading, authError, signInWithGoogle, signInWithGitHub, signOut, getIdToken]
+    [
+      effectiveUser,
+      loading,
+      authError,
+      signInWithGoogle,
+      signInWithGitHub,
+      signOut,
+      getIdToken,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

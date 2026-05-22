@@ -1,9 +1,17 @@
 import {
   GithubAuthProvider,
   GoogleAuthProvider,
+  signInWithPopup,
   signInWithRedirect,
 } from 'firebase/auth';
+import { saveEditorFirebaseSession } from './editorFirebaseSession';
 import { formatFirebaseAuthError } from './firebaseAuthErrors';
+
+const POPUP_FALLBACK_CODES = new Set([
+  'auth/popup-blocked',
+  'auth/popup-closed-by-user',
+  'auth/cancelled-popup-request',
+]);
 
 function googleProvider() {
   const provider = new GoogleAuthProvider();
@@ -16,8 +24,7 @@ function githubProvider() {
 }
 
 /**
- * Full-page OAuth redirect (no popup). Avoids COOP / window.close console noise
- * and shows the provider account picker in the main tab.
+ * Popup first (token saved to sessionStorage immediately). Redirect if popup blocked.
  */
 async function signInWithProvider(auth, provider, setAuthError) {
   if (!auth) {
@@ -25,10 +32,17 @@ async function signInWithProvider(auth, provider, setAuthError) {
   }
   setAuthError('');
   try {
-    await signInWithRedirect(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    if (result?.user) {
+      await saveEditorFirebaseSession(result.user);
+    }
   } catch (err) {
-    const message = formatFirebaseAuthError(err);
-    setAuthError(message);
+    const code = err?.code || '';
+    if (POPUP_FALLBACK_CODES.has(code)) {
+      await signInWithRedirect(auth, provider);
+      return;
+    }
+    setAuthError(formatFirebaseAuthError(err));
     throw err;
   }
 }

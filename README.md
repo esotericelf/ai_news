@@ -15,6 +15,8 @@ Backend scraping, LLM generation, and approval logic live in **AI_News_Scraper**
 
 **Security headers (CSP, HSTS, nosniff):** [docs/SECURITY.md](docs/SECURITY.md) (Netlify); API: [AI_News_Scraper/docs/SECURITY.md](../AI_News_Scraper/docs/SECURITY.md).
 
+**Editor GitHub login (`redirect_uri` error):** [docs/FIREBASE_EDITOR_AUTH.md](docs/FIREBASE_EDITOR_AUTH.md).
+
 ## Local setup
 
 ```bash
