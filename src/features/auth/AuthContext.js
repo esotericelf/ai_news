@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { getRedirectResult, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 import {
   auth,
   getFirebaseInitError,
@@ -7,13 +7,11 @@ import {
   isFirebaseConfigured,
 } from '../../firebase';
 import { setEditorTokenProvider } from '../../api/editor';
-import { formatFirebaseAuthError } from '../../utils/firebaseAuthErrors';
 import {
-  clearFirebaseRedirectParams,
-  isFirebaseRedirectReturn,
-  signInGitHub,
-  signInGoogle,
-} from '../../utils/firebaseAuthSignIn';
+  bootstrapFirebaseAuth,
+  formatBootstrapError,
+} from '../../utils/firebaseAuthBootstrap';
+import { signInGitHub, signInGoogle } from '../../utils/firebaseAuthSignIn';
 
 const AuthContext = createContext(null);
 
@@ -46,31 +44,26 @@ export function AuthProvider({ children }) {
 
     (async () => {
       setLoading(true);
-      const returningFromOAuth = isFirebaseRedirectReturn();
-
       try {
-        // Must finish before onAuthStateChanged — otherwise null fires first and login reappears.
-        const result = await getRedirectResult(auth);
-        if (active && result?.user) {
-          setUser(result.user);
-        } else if (active && auth.currentUser) {
-          setUser(auth.currentUser);
+        const resolved = await bootstrapFirebaseAuth(auth);
+        if (active && resolved) {
+          setUser(resolved);
         }
       } catch (err) {
-        if (active && err?.code && err.code !== 'auth/no-auth-event') {
-          setAuthError(formatFirebaseAuthError(err));
+        if (active) {
+          setAuthError(formatBootstrapError(err));
         }
-      }
-
-      if (active && returningFromOAuth) {
-        clearFirebaseRedirectParams();
       }
 
       if (!active) return;
 
       unsubscribe = onAuthStateChanged(auth, (nextUser) => {
         if (!active) return;
-        setUser(nextUser);
+        if (nextUser) {
+          setUser(nextUser);
+        } else if (!auth.currentUser) {
+          setUser(null);
+        }
         setLoading(false);
       });
     })();
@@ -103,6 +96,7 @@ export function AuthProvider({ children }) {
     setAuthError('');
     if (auth) {
       await firebaseSignOut(auth);
+      setUser(null);
     }
   }, []);
 

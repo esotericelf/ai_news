@@ -6,6 +6,8 @@ export function formatFirebaseAuthError(error) {
 
   const code = error.code || '';
   const hints = {
+    'auth/redirect-session-missing':
+      'Sign-in returned but the browser did not keep your session. Disable strict tracking protection / ad blockers for this site, or try another browser.',
     'auth/argument-error':
       'Firebase Auth is misconfigured. Set REACT_APP_FIREBASE_AUTH_DOMAIN to ainewsrepo.firebaseapp.com, ' +
       'include REACT_APP_FIREBASE_APP_ID in Netlify env, then redeploy. Clear site data for /editor if this persists.',
