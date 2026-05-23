@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify';
 
+/** Matches backend GEO allowlist (content_engine/services/seo_prompts.py). */
 const PURIFY_CONFIG = {
   ALLOWED_TAGS: [
     'p',
@@ -13,6 +14,12 @@ const PURIFY_CONFIG = {
     'strong',
     'em',
     'blockquote',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td',
     'pre',
     'code',
   ],
@@ -64,7 +71,8 @@ export default function ArticleBody({ html }) {
 
   return (
     <div
-      className="article-body prose"
+      className="article-content prose prose-slate"
+      itemProp="articleBody"
       dangerouslySetInnerHTML={{ __html: safeHtml }}
     />
   );

@@ -87,55 +87,63 @@ export default function ArticlePage() {
       />
       <JsonLd data={jsonLd} />
 
-      <article className="page page--article" itemScope itemType="https://schema.org/NewsArticle">
-        <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: title }]} />
+      <article
+        className="page page--article article-geo"
+        itemScope
+        itemType="https://schema.org/NewsArticle"
+      >
+        <div className="article-geo__shell">
+          <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: title }]} />
 
-        <header className="article-header">
-          <span className="article-eyebrow">{category}</span>
-          <h1 itemProp="headline">{title}</h1>
-          <ArticleMeta article={article} />
-          {keywords.length > 0 && (
-            <ul className="article-header__tags" aria-label="Topics">
-              {keywords.map((kw) => (
-                <li key={kw}>
-                  <Tag label={kw} />
-                </li>
-              ))}
-            </ul>
-          )}
-          <ArticleSharePopover url={canonical} title={title} className="article-header__share" />
-        </header>
-
-        <figure className="article-figure">
-          <ArticleImage
-            article={article}
-            itemProp="image"
-            width={1200}
-            height={630}
-            fetchPriority="high"
-          />
-        </figure>
-
-        <ArticleBody html={article.body_html} />
-
-        <ArticlePartnerCta article={article} />
-
-        <footer className="article-footer">
-          <p className="article-footer__attribution">
-            Summary based on reporting from the original publisher.{' '}
-            {article.canonical_url && (
-              <a href={article.canonical_url} rel="noopener noreferrer" target="_blank">
-                Read original article
-              </a>
+          <header className="article-header">
+            <span className="article-eyebrow">{category}</span>
+            <h1 itemProp="headline">{title}</h1>
+            <ArticleMeta article={article} />
+            {keywords.length > 0 && (
+              <ul className="article-header__tags" aria-label="Topics">
+                {keywords.map((kw) => (
+                  <li key={kw}>
+                    <Tag label={kw} />
+                  </li>
+                ))}
+              </ul>
             )}
-          </p>
-        </footer>
+            <ArticleSharePopover url={canonical} title={title} className="article-header__share" />
+          </header>
 
-        <RelatedArticles
-          articles={list}
-          currentSlug={article.slug}
-          keywords={keywords}
-        />
+          <figure className="article-figure">
+            <ArticleImage
+              article={article}
+              itemProp="image"
+              width={1200}
+              height={630}
+              fetchPriority="high"
+            />
+          </figure>
+
+          <div className="article-geo__content">
+            <ArticleBody html={article.body_html} />
+          </div>
+
+          <ArticlePartnerCta article={article} />
+
+          <footer className="article-footer">
+            <p className="article-footer__attribution">
+              Summary based on reporting from the original publisher.{' '}
+              {article.canonical_url && (
+                <a href={article.canonical_url} rel="noopener noreferrer" target="_blank">
+                  Read original article
+                </a>
+              )}
+            </p>
+          </footer>
+
+          <RelatedArticles
+            articles={list}
+            currentSlug={article.slug}
+            keywords={keywords}
+          />
+        </div>
       </article>
     </>
   );
