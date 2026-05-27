@@ -1,7 +1,43 @@
 import { config } from '../config';
 
+function cacheUrlForApiPath(path, params) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  if (normalizedPath === '/api/taxonomy/') return '/seo-cache/taxonomy.json';
+  if (normalizedPath === '/api/tags/') return '/seo-cache/tags.json';
+  if (normalizedPath.startsWith('/api/published/')) {
+    // Detail: /api/published/<slug>/
+    const m = normalizedPath.match(/^\/api\/published\/([^/]+)\/$/);
+    if (m) {
+      return `/seo-cache/published/slug/${decodeURIComponent(m[1])}.json`;
+    }
+    // List: /api/published/?...
+    if (normalizedPath === '/api/published/' || normalizedPath === '/api/published') {
+      const usp = new URLSearchParams();
+      Object.entries(params || {}).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') usp.set(k, String(v));
+      });
+      const key = (usp.toString() || 'default').replace(/[^a-z0-9=_-]+/gi, '_').slice(0, 180);
+      return `/seo-cache/published/list/${key}.json`;
+    }
+  }
+  return null;
+}
+
 export async function apiGet(path, params = {}) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  // Prefer build-time JSON cache (for prerendering and for static hosting when API is down).
+  if (typeof window !== 'undefined' && (window.__REACT_SNAP__ || process.env.NODE_ENV === 'production')) {
+    const cached = cacheUrlForApiPath(normalizedPath, params);
+    if (cached) {
+      const res = await fetch(cached, { headers: { Accept: 'application/json' } });
+      if (res.ok) {
+        return res.json();
+      }
+      // Fall through to live API if cache missing.
+    }
+  }
+
   const url = config.apiBase
     ? new URL(`${config.apiBase}${normalizedPath}`)
     : new URL(normalizedPath, window.location.origin);

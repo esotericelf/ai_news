@@ -17,13 +17,15 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.2",
     "react-scripts": "5.0.1",
+    "react-snap": "^1.23.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "fetch-seo-files": "node scripts/fetch-seo-files.js",
-    "prebuild": "node scripts/fetch-seo-files.js",
+    "prebuild": "node scripts/fetch-seo-files.js && node scripts/build-seo-cache.js",
     "build": "react-scripts build",
+    "postbuild": "node scripts/prerender.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
