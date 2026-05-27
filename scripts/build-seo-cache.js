@@ -125,7 +125,7 @@ async function main() {
   const apiKey = (process.env.REACT_APP_API_KEY || process.env.API_KEY || '').trim();
 
   if (!apiBase) {
-    console.warn('[build-seo-cache] No REACT_APP_API_BASE_URL; skipping cache build.');
+    console.warn('[build-seo-cache] No API base URL; skipping cache build.');
     return;
   }
 

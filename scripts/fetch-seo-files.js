@@ -123,8 +123,11 @@ function writeNetlifyRedirects() {
     // 200! forces Netlify to proxy even when a static copy exists in build/.
     lines.push(`/sitemap.xml  ${apiBase}/sitemap.xml  200!`);
     lines.push(`/robots.txt   ${apiBase}/robots.txt  200!`);
+    // Allow the SPA to call same-origin /api/* and /health (Netlify proxies to API).
+    lines.push(`/api/*        ${apiBase}/api/:splat   200!`);
+    lines.push(`/health       ${apiBase}/health       200!`);
     console.log(
-      `[fetch-seo-files] Wrote public/_redirects — live proxy to ${apiBase} for sitemap/robots`
+      `[fetch-seo-files] Wrote public/_redirects — live proxy to ${apiBase} (sitemap/robots/api/health)`
     );
   } else {
     console.warn(

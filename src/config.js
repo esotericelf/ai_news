@@ -5,7 +5,7 @@ const useDevProxy =
 
 const apiBase = useDevProxy
   ? ''
-  : (process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+  : (process.env.REACT_APP_API_BASE_URL || '').replace(/\/$/, '');
 const siteUrl = (process.env.REACT_APP_SITE_URL || 'http://localhost:3000').replace(
   /\/$/,
   ''

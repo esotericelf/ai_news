@@ -122,8 +122,12 @@ async function main() {
   await run({
     source: 'build',
     include,
+    // Only snapshot the include list (avoid crawling to /404.html etc).
+    crawl: false,
     // Keep it stable in CI/Netlify.
     headless: true,
+    // More generous navigation timeout (ngrok/cold starts can be slow).
+    puppeteer: { timeout: 120000 },
     puppeteerArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
     // Don’t let one flakey route fail the entire deploy.
     // react-snap uses "skipThirdPartyRequests" to reduce noise.
