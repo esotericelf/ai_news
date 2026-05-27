@@ -12,6 +12,7 @@
 /build
 /public/sitemap.xml
 /public/robots.txt
+/public/_redirects
 
 # misc
 .DS_Store

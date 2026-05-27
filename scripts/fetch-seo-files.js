@@ -1,11 +1,44 @@
 /**
  * Fetches robots.txt and sitemap.xml from the Django API into public/
  * so Netlify serves real XML/text (not the SPA index.html).
+ *
  * Runs automatically via npm "prebuild" before react-scripts build.
+ *
+ * Also writes public/_redirects so Netlify can proxy /sitemap.xml and
+ * /robots.txt to the live Django endpoint (Postgres-backed, always fresh).
  */
 
 const fs = require('fs');
 const path = require('path');
+
+const rootDir = path.join(__dirname, '..');
+const publicDir = path.join(rootDir, 'public');
+
+function loadEnvFile(filename) {
+  const filePath = path.join(rootDir, filename);
+  if (!fs.existsSync(filePath)) return;
+  for (const line of fs.readFileSync(filePath, 'utf8').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
+
+loadEnvFile('.env');
+loadEnvFile('.env.local');
+loadEnvFile('.env.production');
 
 const apiBase = (process.env.REACT_APP_API_BASE_URL || process.env.API_BASE_URL || '')
   .replace(/\/$/, '');
@@ -13,7 +46,6 @@ const siteUrl = (
   process.env.REACT_APP_SITE_URL || 'https://ainewsrepo.netlify.app'
 ).replace(/\/$/, '');
 const apiKey = (process.env.REACT_APP_API_KEY || process.env.API_KEY || '').trim();
-const publicDir = path.join(__dirname, '..', 'public');
 
 const FALLBACK_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -54,7 +86,10 @@ async function fetchPath(apiPath, accept) {
 async function writeSeoFile(apiPath, filename, validate, fallback) {
   const outPath = path.join(publicDir, filename);
   if (!apiBase) {
-    console.warn(`[fetch-seo-files] No API URL — writing fallback ${filename}`);
+    console.warn(
+      `[fetch-seo-files] No REACT_APP_API_BASE_URL — writing fallback ${filename}. ` +
+        'Set REACT_APP_API_BASE_URL on Netlify so prebuild can pull the Django sitemap.'
+    );
     fs.writeFileSync(outPath, fallback, 'utf8');
     return false;
   }
@@ -66,19 +101,47 @@ async function writeSeoFile(apiPath, filename, validate, fallback) {
       throw new Error(`invalid response (HTTP ${status}, ${body.length} bytes)`);
     }
     fs.writeFileSync(outPath, body, 'utf8');
-    console.log(`[fetch-seo-files] Wrote public/${filename} (${body.length} bytes)`);
+    const urlCount = filename.endsWith('.xml') ? (body.match(/<loc>/g) || []).length : null;
+    const extra = urlCount != null ? `, ${urlCount} URLs` : '';
+    console.log(`[fetch-seo-files] Wrote public/${filename} (${body.length} bytes${extra})`);
     return true;
   } catch (err) {
-    console.warn(`[fetch-seo-files] ${filename}: ${err.message} — using fallback`);
+    console.warn(
+      `[fetch-seo-files] ${filename}: ${err.message} — using fallback. ` +
+        `Ensure ${apiBase}${apiPath} is reachable during build.`
+    );
     fs.writeFileSync(outPath, fallback, 'utf8');
     return false;
   }
+}
+
+function writeNetlifyRedirects() {
+  const redirectsPath = path.join(publicDir, '_redirects');
+  const lines = [];
+
+  if (apiBase) {
+    // 200! forces Netlify to proxy even when a static copy exists in build/.
+    lines.push(`/sitemap.xml  ${apiBase}/sitemap.xml  200!`);
+    lines.push(`/robots.txt   ${apiBase}/robots.txt  200!`);
+    console.log(
+      `[fetch-seo-files] Wrote public/_redirects — live proxy to ${apiBase} for sitemap/robots`
+    );
+  } else {
+    console.warn(
+      '[fetch-seo-files] No API URL — skipping _redirects proxy (static fallback only).'
+    );
+  }
+
+  fs.writeFileSync(redirectsPath, lines.join('\n') + (lines.length ? '\n' : ''), 'utf8');
 }
 
 async function main() {
   if (!fs.existsSync(publicDir)) {
     fs.mkdirSync(publicDir, { recursive: true });
   }
+
+  console.log(`[fetch-seo-files] API base: ${apiBase || '(not set)'}`);
+  console.log(`[fetch-seo-files] Site URL: ${siteUrl}`);
 
   await writeSeoFile(
     '/sitemap.xml',
@@ -93,6 +156,8 @@ async function main() {
     (body) => body.toLowerCase().includes('user-agent'),
     FALLBACK_ROBOTS
   );
+
+  writeNetlifyRedirects();
 }
 
 main().catch((err) => {

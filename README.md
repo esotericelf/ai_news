@@ -57,7 +57,11 @@ Add `REACT_APP_FIREBASE_*` for Google/GitHub editor sign-in (see below).
 | `npm run fetch-seo-files` | Refresh `public/sitemap.xml` and `public/robots.txt` manually |
 | `npm test` | Run tests |
 
-Generated `public/sitemap.xml` and `public/robots.txt` are gitignored; they are created on each build.
+Generated `public/sitemap.xml`, `public/robots.txt`, and `public/_redirects` are gitignored; they are created on each build.
+
+**Where the sitemap really lives:** Django (`AI_News_Scraper`) builds it dynamically from Postgres at `/sitemap.xml`. This React app does **not** generate URLs itself — `prebuild` snapshots that XML into `public/` and writes Netlify proxy rules so production can stay fresh without redeploying after every scrape.
+
+**If you only see the homepage in `public/sitemap.xml`:** the build could not reach the API (missing `REACT_APP_API_BASE_URL`, ngrok down, or API offline). Fix the env var, ensure Django is up, then run `npm run fetch-seo-files` or redeploy.
 
 ## Deploy to Netlify
 
@@ -84,7 +88,7 @@ Netlify cannot reach `localhost:8000`. Use a **public HTTPS** API URL for produc
 
 Do **not** set `REACT_APP_USE_DEV_PROXY` on Netlify.
 
-**Sitemap:** `prebuild` calls your API. If the API is down during build, a minimal fallback sitemap is used. Redeploy after scrapes to refresh URLs, or run `npm run fetch-seo-files` before build.
+**Sitemap:** `prebuild` pulls `/sitemap.xml` and `/robots.txt` from Django. If the API is unreachable, a **1-URL fallback** is written (homepage only). Set `REACT_APP_API_BASE_URL` to a **stable public HTTPS API** (not localhost). After deploy, `public/_redirects` proxies `/sitemap.xml` and `/robots.txt` to that API so crawlers always get the live Postgres-backed list. Redeploy whenever you change the API URL.
 
 **Google Search Console:** Use **URL prefix** verification (`https://your-site.netlify.app`) with **HTML tag** or the file `public/googleNKJh_qORZg2X3hGb4oCIfiEmgH93H4f2ovlcDp2V0AQ.html`. Domain DNS TXT does not work on `*.netlify.app`.
 
