@@ -33,16 +33,25 @@ async function parseJsonResponse(res) {
   return data;
 }
 
-/** GET /api/published/<slug>/comments/ — always live API (not seo-cache). */
+/** Django: GET /api/published/<slug>/comments/ */
+function commentsListPath(slug) {
+  return `/api/published/${encodeURIComponent(slug)}/comments/`;
+}
+
+/** Django: POST /api/published/<slug>/comments/post/ */
+function commentsPostPath(slug) {
+  return `/api/published/${encodeURIComponent(slug)}/comments/post/`;
+}
+
+/** GET — always live API (not seo-cache). */
 export async function fetchArticleComments(slug) {
-  const path = `/api/published/${encodeURIComponent(slug)}/comments/`;
-  const res = await fetch(apiUrl(path), { headers: buildHeaders() });
+  const res = await fetch(apiUrl(commentsListPath(slug)), { headers: buildHeaders() });
   return parseJsonResponse(res);
 }
 
-/** POST /api/published/<slug>/comments/post/ */
+/** POST */
 export async function postArticleComment(slug, { content, idToken, seoArticleId, profile }) {
-  const path = `/api/published/${encodeURIComponent(slug)}/comments/post/`;
+  const path = commentsPostPath(slug);
   const body = {
     content,
     seo_article_id: seoArticleId,

@@ -19,5 +19,7 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    # Firebase signInWithPopup: allow popup to postMessage back to the opener.
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
     Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://accounts.google.com https://github.com; script-src 'self' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com https://*.gstatic.com; script-src-elem 'self' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com https://*.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' https: wss:; frame-src 'self' https://ainewsrepo.firebaseapp.com https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://github.com https://*.google.com https://*.gstatic.com; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests"
 
