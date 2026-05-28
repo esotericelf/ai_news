@@ -32,7 +32,18 @@ export async function apiGet(path, params = {}) {
     if (cached) {
       const res = await fetch(cached, { headers: { Accept: 'application/json' } });
       if (res.ok) {
-        return res.json();
+        // Netlify SPA rewrites can return index.html with 200 for missing JSON files.
+        // Only treat the cache as valid if it is actually JSON.
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        if (ct.includes('application/json')) {
+          return res.json();
+        }
+        const text = await res.text().catch(() => '');
+        const trimmed = text.trim().toLowerCase();
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+          return JSON.parse(text);
+        }
+        // Fall through to live API if cache is HTML/text.
       }
       // Fall through to live API if cache missing.
     }
