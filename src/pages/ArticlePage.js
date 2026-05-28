@@ -8,6 +8,7 @@ import ArticleBody from '../features/articles/ArticleBody';
 import ArticleMeta from '../features/articles/ArticleMeta';
 import ArticlePartnerCta from '../features/articles/ArticlePartnerCta';
 import ArticleSharePopover from '../features/articles/ArticleSharePopover';
+import CommentsSection from '../features/comments/CommentsSection';
 import RelatedArticles from '../features/articles/RelatedArticles';
 import JsonLd from '../seo/JsonLd';
 import SeoHead from '../seo/SeoHead';
@@ -137,6 +138,8 @@ export default function ArticlePage() {
               )}
             </p>
           </footer>
+
+          <CommentsSection slug={article.slug} seoArticleId={article.id} />
 
           <RelatedArticles
             articles={list}
