@@ -1,10 +1,22 @@
 import { auth } from '../firebase';
+import { config } from '../config';
 
 /** Optional: supply Firebase ID token for editor API calls. */
 let tokenProvider = null;
 
 export function setEditorTokenProvider(fn) {
   tokenProvider = fn;
+}
+
+function editorApiUrl(path) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  if (config.apiBase) {
+    return `${config.apiBase}${normalizedPath}`;
+  }
+  if (typeof window !== 'undefined') {
+    return new URL(normalizedPath, window.location.origin).toString();
+  }
+  return normalizedPath;
 }
 
 async function editorHeaders() {
@@ -31,7 +43,10 @@ async function editorHeaders() {
   }
 
   const key =
-    process.env.REACT_APP_EDITOR_API_KEY || process.env.REACT_APP_API_KEY || '';
+    process.env.REACT_APP_EDITOR_API_KEY ||
+    config.apiKey ||
+    process.env.REACT_APP_API_KEY ||
+    '';
   if (key) {
     headers['X-Api-Key'] = key;
   }
@@ -39,13 +54,7 @@ async function editorHeaders() {
 }
 
 async function editorFetch(path, options = {}) {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const base =
-    process.env.NODE_ENV === 'development' &&
-    process.env.REACT_APP_USE_DEV_PROXY !== 'false'
-      ? ''
-      : (process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
-  const url = `${base}${normalizedPath}`;
+  const url = editorApiUrl(path);
   const headers = { ...(await editorHeaders()), ...options.headers };
   if (/ngrok/i.test(url)) {
     headers['ngrok-skip-browser-warning'] = 'true';
@@ -57,6 +66,7 @@ async function editorFetch(path, options = {}) {
     try {
       const body = await res.json();
       err.detail = body.detail;
+      err.message = body.detail || err.message;
     } catch {
       /* ignore */
     }
@@ -72,6 +82,10 @@ export function fetchEditorStats() {
 
 export function fetchDrafts() {
   return editorFetch('/api/editor/drafts/');
+}
+
+export function fetchPendingComments() {
+  return editorFetch('/api/editor/comments/');
 }
 
 export function fetchDraft(pk) {
@@ -94,4 +108,12 @@ export function reviseDraft(pk, comment) {
     method: 'POST',
     body: JSON.stringify({ comment }),
   });
+}
+
+export function approveComment(pk) {
+  return editorFetch(`/api/editor/comments/${pk}/approve/`, { method: 'POST' });
+}
+
+export function rejectComment(pk) {
+  return editorFetch(`/api/editor/comments/${pk}/reject/`, { method: 'POST' });
 }

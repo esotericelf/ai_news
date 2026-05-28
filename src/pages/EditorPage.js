@@ -3,14 +3,18 @@ import { Link } from 'react-router-dom';
 import ArticleBody from '../features/articles/ArticleBody';
 import ArticleSharePopover from '../features/articles/ArticleSharePopover';
 import {
+  approveComment,
   approveDraft,
   fetchDraft,
   fetchDrafts,
   fetchEditorStats,
+  fetchPendingComments,
+  rejectComment,
   rejectDraft,
   reviseDraft,
 } from '../api/editor';
 import { absoluteArticleUrl, articleUrl } from '../config';
+import { formatRelativeDate } from '../utils/format';
 import { useAuth } from '../features/auth/AuthContext';
 import EditorLogin from '../features/auth/EditorLogin';
 const STORAGE_KEY = 'ai_news_editor_key';
@@ -21,8 +25,11 @@ const REVISION_ACTIVE = new Set(['queued', 'processing']);
 function editorStatsLine(stats) {
   if (!stats) return null;
   const parts = [
-    `${stats.pending_review ?? 0} in queue`,
+    `${stats.pending_review ?? 0} articles in queue`,
   ];
+  if (stats.pending_comments != null) {
+    parts.push(`${stats.pending_comments} comments pending`);
+  }
   if (stats.revising) parts.push(`${stats.revising} revising`);
   parts.push(`${stats.public ?? 0} public`);
   if (stats.on_feed != null) parts.push(`${stats.on_feed} on feed`);
@@ -53,8 +60,11 @@ export default function EditorPage() {
   const isAuthed = fbOn ? !!user : !!apiKey;
   const [stats, setStats] = useState(null);
   const [drafts, setDrafts] = useState([]);
+  const [pendingComments, setPendingComments] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
   const [detail, setDetail] = useState(null);
+  const [commentDetail, setCommentDetail] = useState(null);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [actionMsg, setActionMsg] = useState('');
@@ -74,7 +84,9 @@ export default function EditorPage() {
     sessionStorage.removeItem(STORAGE_KEY);
     setApiKey('');
     setSelectedId(null);
+    setSelectedCommentId(null);
     setDetail(null);
+    setCommentDetail(null);
   };
 
   const loadQueue = useCallback(async () => {
@@ -83,8 +95,17 @@ export default function EditorPage() {
     setError('');
     try {
       const [s, d] = await Promise.all([fetchEditorStats(), fetchDrafts()]);
+      let commentsPayload = { results: [] };
+      try {
+        commentsPayload = await fetchPendingComments();
+      } catch (commentErr) {
+        if (commentErr.status !== 404) {
+          throw commentErr;
+        }
+      }
       setStats(s);
       setDrafts(d.results || []);
+      setPendingComments(commentsPayload.results || []);
       setStatus('ready');
     } catch (e) {
       setError(e.detail || e.message);
@@ -217,8 +238,53 @@ export default function EditorPage() {
 
   const clearSelection = () => {
     setSelectedId(null);
+    setSelectedCommentId(null);
+    setDetail(null);
+    setCommentDetail(null);
+    setShowPreviousBody(false);
+  };
+
+  const selectArticle = (id) => {
+    setSelectedId(id);
+    setSelectedCommentId(null);
+    setCommentDetail(null);
+  };
+
+  const selectComment = (comment) => {
+    setSelectedCommentId(comment.id);
+    setCommentDetail(comment);
+    setSelectedId(null);
     setDetail(null);
     setShowPreviousBody(false);
+  };
+
+  const onApproveComment = async () => {
+    if (!selectedCommentId) return;
+    setActionMsg('');
+    try {
+      await approveComment(selectedCommentId);
+      setActionMsg('Comment approved and visible on the live article.');
+      setSelectedCommentId(null);
+      setCommentDetail(null);
+      await loadQueue();
+    } catch (e) {
+      setError(e.detail || e.message);
+    }
+  };
+
+  const onRejectComment = async () => {
+    if (!selectedCommentId) return;
+    if (!window.confirm('Remove this comment permanently?')) return;
+    setActionMsg('');
+    try {
+      await rejectComment(selectedCommentId);
+      setActionMsg('Comment removed.');
+      setSelectedCommentId(null);
+      setCommentDetail(null);
+      await loadQueue();
+    } catch (e) {
+      setError(e.detail || e.message);
+    }
   };
 
   return (
@@ -256,7 +322,7 @@ export default function EditorPage() {
       {actionMsg && <p className="editor-action-msg">{actionMsg}</p>}
 
       <div
-        className={`editor-layout${selectedId ? ' editor-layout--detail' : ''}`}
+        className={`editor-layout${selectedId || selectedCommentId ? ' editor-layout--detail' : ''}`}
       >
         <aside className="editor-queue" aria-label="Articles awaiting review">
           <h2>Needs review</h2>
@@ -273,7 +339,7 @@ export default function EditorPage() {
                 <button
                   type="button"
                   className={`editor-queue__item${selectedId === d.id ? ' editor-queue__item--active' : ''}`}
-                  onClick={() => setSelectedId(d.id)}
+                  onClick={() => selectArticle(d.id)}
                 >
                   <span className="editor-queue__title">{d.seo_title || d.source_title}</span>
                   <span className="editor-queue__meta">
@@ -300,11 +366,99 @@ export default function EditorPage() {
               </li>
             ))}
           </ul>
+
+          <h2 className="editor-queue__section-title">Comments pending</h2>
+          {!pendingComments.length && status === 'ready' && (
+            <p className="editor-empty editor-empty--compact">No comments awaiting moderation.</p>
+          )}
+          <ul>
+            {pendingComments.map((c) => (
+              <li key={c.id} className="editor-queue__entry">
+                <button
+                  type="button"
+                  className={`editor-queue__item editor-queue__item--comment${selectedCommentId === c.id ? ' editor-queue__item--active' : ''}`}
+                  onClick={() => selectComment(c)}
+                >
+                  <span className="editor-queue__title">
+                    {c.display_name || 'Reader'}
+                    {c.article_title ? ` · ${c.article_title}` : ''}
+                  </span>
+                  <span className="editor-queue__meta">
+                    {formatRelativeDate(c.created_at)}
+                    {c.provider ? ` · ${c.provider}` : ''}
+                  </span>
+                </button>
+                {c.article_slug ? (
+                  <Link
+                    to={articleUrl(c.article_slug)}
+                    className="editor-queue__live"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open article in a new tab"
+                  >
+                    Live
+                  </Link>
+                ) : null}
+              </li>
+            ))}
+          </ul>
         </aside>
 
         <main className="editor-preview">
-          {!detail && <p className="editor-empty">Select an article to review.</p>}
-          {detail && (
+          {commentDetail && (
+            <div className="editor-preview__panel">
+              <div className="editor-mobile-nav">
+                <button
+                  type="button"
+                  className="btn btn--ghost editor-mobile-nav__back"
+                  onClick={clearSelection}
+                >
+                  ← Queue
+                </button>
+                {commentDetail.article_slug && (
+                  <Link
+                    to={articleUrl(commentDetail.article_slug)}
+                    className="editor-mobile-nav__live btn btn--ghost"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Article
+                  </Link>
+                )}
+              </div>
+              <article className="editor-comment-review">
+                <p className="editor-comment-review__meta">
+                  From <strong>{commentDetail.display_name || 'Reader'}</strong>
+                  {commentDetail.provider ? ` (${commentDetail.provider})` : ''}
+                  {' · '}
+                  {formatRelativeDate(commentDetail.created_at)}
+                </p>
+                {commentDetail.article_title && commentDetail.article_slug && (
+                  <p className="editor-comment-review__article">
+                    On:{' '}
+                    <Link to={articleUrl(commentDetail.article_slug)} target="_blank" rel="noopener noreferrer">
+                      {commentDetail.article_title}
+                    </Link>
+                  </p>
+                )}
+                <blockquote className="editor-comment-review__body">{commentDetail.content}</blockquote>
+              </article>
+              <div className="editor-preview__dock">
+                <div className="editor-preview__actions">
+                  <button type="button" className="btn btn--primary" onClick={onApproveComment}>
+                    Approve comment
+                  </button>
+                  <button type="button" className="btn btn--ghost" onClick={onRejectComment}>
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {!detail && !commentDetail && (
+            <p className="editor-empty">Select an article or pending comment to review.</p>
+          )}
+          {detail && !commentDetail && (
             <div className="editor-preview__panel">
               <div className="editor-mobile-nav">
                 <button

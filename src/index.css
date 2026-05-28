@@ -2285,6 +2285,48 @@ button.article-share__btn {
   }
 }
 
+.editor-queue__section-title {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: var(--space-xl) 0 var(--space-md);
+  color: var(--text-secondary);
+}
+
+.editor-empty--compact {
+  margin-bottom: var(--space-md);
+  font-size: 0.875rem;
+}
+
+.editor-comment-review {
+  padding: var(--space-lg);
+  max-width: var(--read-width);
+}
+
+.editor-comment-review__meta {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-sm);
+}
+
+.editor-comment-review__article {
+  margin: 0 0 var(--space-md);
+  font-size: 0.9375rem;
+}
+
+.editor-comment-review__body {
+  margin: 0;
+  padding: var(--space-md);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .editor-queue ul {
   list-style: none;
   margin: 0;
