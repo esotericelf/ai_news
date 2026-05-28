@@ -17,6 +17,10 @@ import { absoluteArticleUrl, articleUrl } from '../config';
 import { formatRelativeDate } from '../utils/format';
 import { useAuth } from '../features/auth/AuthContext';
 import EditorLogin from '../features/auth/EditorLogin';
+import {
+  EditorArticlesQueue,
+  EditorCommentsQueue,
+} from '../features/editor/EditorSidebarQueues';
 const STORAGE_KEY = 'ai_news_editor_key';
 
 const REVISION_ACTIVE = new Set(['queued', 'processing']);
@@ -24,12 +28,11 @@ const REVISION_ACTIVE = new Set(['queued', 'processing']);
 /** Stats line — only uses boolean status model (no legacy failed/published keys). */
 function editorStatsLine(stats) {
   if (!stats) return null;
-  const parts = [
-    `${stats.pending_review ?? 0} articles in queue`,
-  ];
-  if (stats.pending_comments != null) {
-    parts.push(`${stats.pending_comments} comments pending`);
+  const parts = [];
+  if (stats.pending_comments > 0) {
+    parts.push(`${stats.pending_comments} comment${stats.pending_comments === 1 ? '' : 's'} need approval`);
   }
+  parts.push(`${stats.pending_review ?? 0} articles in queue`);
   if (stats.revising) parts.push(`${stats.revising} revising`);
   parts.push(`${stats.public ?? 0} public`);
   if (stats.on_feed != null) parts.push(`${stats.on_feed} on feed`);
@@ -299,8 +302,8 @@ export default function EditorPage() {
             <>
               <p className="editor-header__stats">{editorStatsLine(stats)}</p>
               <p className="editor-header__legend">
-                Queue = public and not signed off. Draft = thin, not on site. There is no
-                separate failed bucket anymore — reject moves an item to draft.
+                Two queues in the left column: <strong>Comments</strong> first (moderation),
+                then <strong>Articles</strong> (sign-off). Reject on an article moves it to draft.
               </p>
             </>
           )}
@@ -318,91 +321,34 @@ export default function EditorPage() {
         </div>
       </header>
 
+      {stats?.pending_comments > 0 && (
+        <p className="editor-alert" role="status">
+          <strong>{stats.pending_comments}</strong> reader comment
+          {stats.pending_comments === 1 ? '' : 's'} need approval — use the{' '}
+          <strong>Comments</strong> queue at the top of the left column.
+        </p>
+      )}
+
       {error && <p className="editor-error">{error}</p>}
       {actionMsg && <p className="editor-action-msg">{actionMsg}</p>}
 
       <div
         className={`editor-layout${selectedId || selectedCommentId ? ' editor-layout--detail' : ''}`}
       >
-        <aside className="editor-queue" aria-label="Articles awaiting review">
-          <h2>Needs review</h2>
-          {status === 'loading' && <p>Loading…</p>}
-          {!drafts.length && status === 'ready' && (
-            <p className="editor-empty">
-              Queue is empty. New articles go public automatically; they stay in this list
-              until you click Mark reviewed.
-            </p>
-          )}
-          <ul>
-            {drafts.map((d) => (
-              <li key={d.id} className="editor-queue__entry">
-                <button
-                  type="button"
-                  className={`editor-queue__item${selectedId === d.id ? ' editor-queue__item--active' : ''}`}
-                  onClick={() => selectArticle(d.id)}
-                >
-                  <span className="editor-queue__title">{d.seo_title || d.source_title}</span>
-                  <span className="editor-queue__meta">
-                    {d.reviewed ? 'Reviewed' : 'In queue'}
-                    {d.status === false ? ' · draft' : ''}
-                    {d.revision_status && d.revision_status !== 'idle'
-                      ? ` · ${d.revision_status}`
-                      : ''}
-                    {' · '}
-                    {d.read_time_minutes} min
-                  </span>
-                </button>
-                {d.slug ? (
-                  <Link
-                    to={articleUrl(d.slug)}
-                    className="editor-queue__live"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Open live page in a new tab"
-                  >
-                    Live
-                  </Link>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-
-          <h2 className="editor-queue__section-title">Comments pending</h2>
-          {!pendingComments.length && status === 'ready' && (
-            <p className="editor-empty editor-empty--compact">No comments awaiting moderation.</p>
-          )}
-          <ul>
-            {pendingComments.map((c) => (
-              <li key={c.id} className="editor-queue__entry">
-                <button
-                  type="button"
-                  className={`editor-queue__item editor-queue__item--comment${selectedCommentId === c.id ? ' editor-queue__item--active' : ''}`}
-                  onClick={() => selectComment(c)}
-                >
-                  <span className="editor-queue__title">
-                    {c.display_name || 'Reader'}
-                    {c.article_title ? ` · ${c.article_title}` : ''}
-                  </span>
-                  <span className="editor-queue__meta">
-                    {formatRelativeDate(c.created_at)}
-                    {c.provider ? ` · ${c.provider}` : ''}
-                  </span>
-                </button>
-                {c.article_slug ? (
-                  <Link
-                    to={articleUrl(c.article_slug)}
-                    className="editor-queue__live"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Open article in a new tab"
-                  >
-                    Live
-                  </Link>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </aside>
+        <div className="editor-queues" aria-label="Review queues">
+          <EditorCommentsQueue
+            comments={pendingComments}
+            status={status}
+            selectedCommentId={selectedCommentId}
+            onSelectComment={selectComment}
+          />
+          <EditorArticlesQueue
+            drafts={drafts}
+            status={status}
+            selectedId={selectedId}
+            onSelectArticle={selectArticle}
+          />
+        </div>
 
         <main className="editor-preview">
           {commentDetail && (

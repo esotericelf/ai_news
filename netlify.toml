@@ -6,6 +6,19 @@
 [functions]
   directory = "netlify/functions"
 
+# API proxy must come before the SPA catch-all (function uses API_BASE_URL at runtime).
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/proxy/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/health"
+  to = "/.netlify/functions/proxy/health"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

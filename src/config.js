@@ -3,9 +3,22 @@ const useDevProxy =
   process.env.NODE_ENV === 'development' &&
   process.env.REACT_APP_USE_DEV_PROXY !== 'false';
 
-const apiBase = useDevProxy
-  ? ''
-  : (process.env.REACT_APP_API_BASE_URL || '').replace(/\/$/, '');
+const rawApiBase = (process.env.REACT_APP_API_BASE_URL || '').replace(/\/$/, '');
+
+/** Same-origin /api proxy (Netlify function). Avoids CORS when REACT_APP_API_BASE_URL points at ngrok. */
+export function getApiBase() {
+  if (useDevProxy) return '';
+  if (process.env.REACT_APP_USE_SAME_ORIGIN_API === '1') return '';
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname || '';
+    if (/\.netlify\.app$/i.test(host)) return '';
+  }
+  if (process.env.NETLIFY === 'true' && process.env.NODE_ENV === 'production') {
+    return '';
+  }
+  return rawApiBase;
+}
+
 const siteUrl = (process.env.REACT_APP_SITE_URL || 'http://localhost:3000').replace(
   /\/$/,
   ''
@@ -16,7 +29,10 @@ const devProxyTarget = (
 ).replace(/\/$/, '');
 
 export const config = {
-  apiBase,
+  /** Build-time default; prefer getApiBase() at request time in the browser. */
+  get apiBase() {
+    return getApiBase();
+  },
   useDevProxy,
   devProxyTarget,
   siteUrl,

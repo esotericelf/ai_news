@@ -117,21 +117,27 @@ async function writeSeoFile(apiPath, filename, validate, fallback) {
 
 function writeNetlifyRedirects() {
   const redirectsPath = path.join(publicDir, '_redirects');
+  const onNetlify =
+    process.env.NETLIFY === 'true' || /\.netlify\.app$/i.test(siteUrl);
+  const runtimeApi =
+    (process.env.API_BASE_URL || process.env.REACT_APP_API_BASE_URL || apiBase || '')
+      .replace(/\/$/, '');
+
   const lines = [];
 
-  if (apiBase) {
-    // Route public endpoints through a Netlify Function so we can inject ngrok headers.
-    // 200! forces Netlify to proxy even when a static copy exists in build/.
+  // Always write proxy rules on Netlify deploys (function reads API_BASE_URL at runtime).
+  if (onNetlify || apiBase || runtimeApi) {
     lines.push(`/sitemap.xml  /.netlify/functions/proxy/sitemap.xml  200!`);
     lines.push(`/robots.txt   /.netlify/functions/proxy/robots.txt   200!`);
     lines.push(`/health       /.netlify/functions/proxy/health       200!`);
     lines.push(`/api/*        /.netlify/functions/proxy/api/:splat   200!`);
     console.log(
-      `[fetch-seo-files] Wrote public/_redirects — live proxy via Netlify function (API base: ${apiBase})`
+      `[fetch-seo-files] Wrote public/_redirects — API proxy` +
+        (runtimeApi ? ` (build API: ${runtimeApi})` : ' (set API_BASE_URL on Netlify)')
     );
   } else {
     console.warn(
-      '[fetch-seo-files] No API URL — skipping _redirects proxy (static fallback only).'
+      '[fetch-seo-files] No API URL — skipping _redirects proxy (local build only).'
     );
   }
 

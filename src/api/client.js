@@ -1,4 +1,5 @@
-import { config } from '../config';
+import { config, getApiBase } from '../config';
+import { buildApiUrl } from './http';
 
 function cacheUrlForApiPath(path, params) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -49,12 +50,10 @@ export async function apiGet(path, params = {}) {
     }
   }
 
-  const url = config.apiBase
-    ? new URL(`${config.apiBase}${normalizedPath}`)
-    : new URL(normalizedPath, window.location.origin);
+  const requestUrlObj = new URL(buildApiUrl(normalizedPath));
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
-      url.searchParams.set(key, value);
+      requestUrlObj.searchParams.set(key, String(value));
     }
   });
 
@@ -62,7 +61,7 @@ export async function apiGet(path, params = {}) {
   if (config.apiKey) {
     headers['X-Api-Key'] = config.apiKey;
   }
-  const requestUrl = url.toString();
+  const requestUrl = requestUrlObj.toString();
   if (/ngrok/i.test(requestUrl)) {
     headers['ngrok-skip-browser-warning'] = 'true';
   }
@@ -72,7 +71,7 @@ export async function apiGet(path, params = {}) {
     res = await fetch(requestUrl, { headers });
   } catch (err) {
     const usingProxy = config.useDevProxy;
-    const apiTarget = usingProxy ? config.devProxyTarget : config.apiBase || 'http://localhost:8000';
+    const apiTarget = usingProxy ? config.devProxyTarget : getApiBase() || window.location.origin;
     const hint =
       'Cannot reach the API. ' +
       (usingProxy
