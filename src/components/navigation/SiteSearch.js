@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import useUrlSearch from '../../hooks/useUrlSearch';
+
+function buildHomeSearch(trimmed) {
+  return trimmed ? `search=${encodeURIComponent(trimmed)}` : '';
+}
 
 export default function SiteSearch() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { display } = useUrlSearch();
   const [value, setValue] = useState(display);
 
@@ -15,17 +18,14 @@ export default function SiteSearch() {
   const handleSubmit = (event) => {
     event.preventDefault();
     const trimmed = value.trim();
-    const params = new URLSearchParams();
-    if (trimmed) {
-      params.set('search', trimmed);
-    }
-    const qs = params.toString();
-    const targetPath = location.pathname === '/' ? '/' : '/';
-    navigate(qs ? `${targetPath}?${qs}` : targetPath);
+    navigate({
+      pathname: '/',
+      search: buildHomeSearch(trimmed),
+    });
   };
 
   return (
-    <form className="site-search" action="/" method="get" role="search" onSubmit={handleSubmit}>
+    <form className="site-search" role="search" noValidate onSubmit={handleSubmit}>
       <label htmlFor="site-search-input" className="visually-hidden">
         Search articles
       </label>
