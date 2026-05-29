@@ -3,7 +3,7 @@ import {
   normalizeThreeSentenceSummary,
 } from '../../utils/seoMatrix';
 
-export function ArticleSummary({ article }) {
+function ArticleSummary({ article }) {
   const sentences = normalizeThreeSentenceSummary(article?.three_sentence_summary);
   if (!sentences.length) return null;
 
@@ -16,7 +16,7 @@ export function ArticleSummary({ article }) {
   );
 }
 
-export function ArticleKeyMetrics({ article }) {
+function ArticleKeyMetrics({ article }) {
   const metrics = normalizeKeyMetrics(article?.key_metrics);
   if (!metrics.length) return null;
 

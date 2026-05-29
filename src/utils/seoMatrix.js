@@ -111,17 +111,6 @@ export function articleExcerpt(article) {
   return article?.meta_description || '';
 }
 
-export function hasSeoMatrixContent(article) {
-  if (!article) return false;
-  return (
-    normalizeThreeSentenceSummary(article.three_sentence_summary).length > 0 ||
-    normalizeEntities(article.companies).length > 0 ||
-    normalizeEntities(article.tools).length > 0 ||
-    normalizeEntities(article.industries).length > 0 ||
-    normalizeKeyMetrics(article.key_metrics).length > 0
-  );
-}
-
 /** Companies and tools only — used for inline card / header badges. */
 export function companyAndToolBadges(article) {
   if (!article) return [];

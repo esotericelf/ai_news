@@ -10,7 +10,6 @@ import ArticleMatrixBadges from './ArticleMatrixBadges';
 export default function ArticleCard({ article, variant = 'default' }) {
   const title = article.seo_title || 'Untitled';
   const category = articleCategory(article);
-  const excerpt = articleExcerpt(article);
   const date = article.source?.published_at || article.generated_at;
   return (
     <article className={`story-card story-card--${variant}`}>
@@ -28,7 +27,7 @@ export default function ArticleCard({ article, variant = 'default' }) {
           <span className="story-card__category">{category}</span>
           <h2 className="story-card__title">{title}</h2>
           <ArticleMatrixBadges article={article} />
-          <p className="story-card__dek">{excerpt}</p>
+          <p className="story-card__dek">{articleExcerpt(article)}</p>
           <footer className="story-card__meta">
             <time dateTime={date}>{formatRelativeDate(date)}</time>
             {article.read_time_minutes && (
