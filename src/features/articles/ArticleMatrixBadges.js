@@ -10,7 +10,7 @@ export default function ArticleMatrixBadges({ article }) {
     <ul className="article-matrix__tags" aria-label="Companies and tools">
       {badges.map((entity, index) => (
         <li key={entity.slug || `${entity.label}-${index}`}>
-          <Tag label={entity.label} slug={entity.slug} />
+          <Tag label={entity.label} slug={entity.slug} matrixType={entity.matrixType} />
         </li>
       ))}
     </ul>

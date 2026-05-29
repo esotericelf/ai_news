@@ -88,12 +88,30 @@ const TAXONOMY_FALLBACK = {
   ],
 };
 
-export function fallbackTagsFromTree(tree = TAXONOMY_FALLBACK) {
-  return (tree.entities ?? []).map((e) => ({
-    slug: e.slug,
-    title: e.title,
-    article_count: 0,
-  }));
+const FALLBACK_TOOL_SLUGS = new Set([
+  'hugging-face',
+  'ollama',
+  'langchain',
+  'scrapegraphai',
+  'playwright',
+  'midjourney',
+  'stable-diffusion',
+  'cursor',
+  'github-copilot',
+]);
+
+export function fallbackMatrixFromTree(tree = TAXONOMY_FALLBACK) {
+  const companies = [];
+  const tools = [];
+  for (const e of tree.entities ?? []) {
+    const row = { slug: e.slug, title: e.title, article_count: 0 };
+    if (FALLBACK_TOOL_SLUGS.has(e.slug)) {
+      tools.push(row);
+    } else {
+      companies.push(row);
+    }
+  }
+  return { companies, tools, industries: [] };
 }
 
 export default TAXONOMY_FALLBACK;

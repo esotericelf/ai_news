@@ -94,7 +94,9 @@ async function apiGetJson(apiBase, apiPath, apiKey) {
 function cachePathForApi(apiPath) {
   // Map known endpoints to stable cache locations.
   if (apiPath === '/api/taxonomy/') return path.join(cacheDir, 'taxonomy.json');
-  if (apiPath === '/api/tags/') return path.join(cacheDir, 'tags.json');
+  if (apiPath === '/api/companies/') return path.join(cacheDir, 'companies.json');
+  if (apiPath === '/api/tools/') return path.join(cacheDir, 'tools.json');
+  if (apiPath === '/api/industries/') return path.join(cacheDir, 'industries.json');
 
   // /api/published/<slug>/
   const m = apiPath.match(/^\/api\/published\/([^/]+)\/$/);
@@ -142,17 +144,27 @@ async function main() {
   const limits = {
     news: intEnv('PRERENDER_NEWS_LIMIT', 100),
     category: intEnv('PRERENDER_CATEGORY_LIMIT', 50),
-    tag: intEnv('PRERENDER_TAG_LIMIT', 30),
+    matrix: intEnv('PRERENDER_MATRIX_LIMIT', 30),
   };
 
   const paths = uniq(extractLocs(sitemapXml).map(toPathname).filter(Boolean));
   const categoryPaths = paths.filter((p) => p.startsWith('/category/')).slice(0, limits.category);
-  const tagPaths = paths.filter((p) => p.startsWith('/tags/')).slice(0, limits.tag);
+  const matrixPaths = paths
+    .filter(
+      (p) =>
+        p.startsWith('/companies/') ||
+        p.startsWith('/tools/') ||
+        p.startsWith('/industries/') ||
+        p.startsWith('/tags/')
+    )
+    .slice(0, limits.matrix);
   const newsPaths = paths.filter((p) => p.startsWith('/news/')).slice(0, limits.news);
 
   const apiPaths = new Set();
   apiPaths.add('/api/taxonomy/');
-  apiPaths.add('/api/tags/');
+  apiPaths.add('/api/companies/');
+  apiPaths.add('/api/tools/');
+  apiPaths.add('/api/industries/');
   apiPaths.add('/api/published/?page=1&ordering=-generated_at');
 
   for (const p of categoryPaths) {
@@ -164,9 +176,14 @@ async function main() {
     apiPaths.add(`/api/published/?${qs.toString()}`);
   }
 
-  for (const p of tagPaths) {
-    const slug = p.split('/').filter(Boolean)[1];
-    const qs = new URLSearchParams({ page: '1', ordering: '-generated_at', tag: slug });
+  for (const p of matrixPaths) {
+    const parts = p.split('/').filter(Boolean);
+    const segment = parts[0];
+    const slug = parts[1];
+    const qs = new URLSearchParams({ page: '1', ordering: '-generated_at' });
+    if (segment === 'companies' || segment === 'tags') qs.set('company', slug);
+    else if (segment === 'tools') qs.set('tool', slug);
+    else if (segment === 'industries') qs.set('industry', slug);
     apiPaths.add(`/api/published/?${qs.toString()}`);
   }
 
@@ -178,7 +195,7 @@ async function main() {
   const list = [...apiPaths];
   console.log(
     `[build-seo-cache] Building cache from ${apiBase} (${list.length} API calls; ` +
-      `news=${newsPaths.length}, categories=${categoryPaths.length}, tags=${tagPaths.length})`
+      `news=${newsPaths.length}, categories=${categoryPaths.length}, matrix=${matrixPaths.length})`
   );
 
   let ok = 0;

@@ -1,16 +1,24 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { loadTagCatalog, loadTaxonomyTree } from '../../api/taxonomy';
+import { loadMatrixCatalog } from '../../api/matrix';
+import { loadTaxonomyTree } from '../../api/taxonomy';
 
 export const loadTaxonomy = createAsyncThunk(
   'taxonomy/load',
   async (_, { rejectWithValue }) => {
     try {
       const { tree, fromFallback: treeFallback } = await loadTaxonomyTree();
-      const { tags, fromFallback: tagsFallback } = await loadTagCatalog(tree);
+      const {
+        companies,
+        tools,
+        industries,
+        fromFallback: matrixFallback,
+      } = await loadMatrixCatalog(tree);
       return {
         tree,
-        tags,
-        fromFallback: treeFallback || tagsFallback,
+        companies,
+        tools,
+        industries,
+        fromFallback: treeFallback || matrixFallback,
       };
     } catch (err) {
       return rejectWithValue(err.message || 'Failed to load taxonomy');
@@ -22,7 +30,9 @@ const taxonomySlice = createSlice({
   name: 'taxonomy',
   initialState: {
     tree: null,
-    tags: [],
+    companies: [],
+    tools: [],
+    industries: [],
     status: 'idle',
     error: null,
     fromFallback: false,
@@ -37,7 +47,9 @@ const taxonomySlice = createSlice({
       .addCase(loadTaxonomy.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.tree = action.payload.tree;
-        state.tags = action.payload.tags;
+        state.companies = action.payload.companies;
+        state.tools = action.payload.tools;
+        state.industries = action.payload.industries;
         state.fromFallback = action.payload.fromFallback;
       })
       .addCase(loadTaxonomy.rejected, (state, action) => {

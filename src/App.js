@@ -9,7 +9,8 @@ import ArticlePage from './pages/ArticlePage';
 import CategoryPage from './pages/CategoryPage';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
-import TagPage from './pages/TagPage';
+import LegacyTagRedirect from './pages/LegacyTagRedirect';
+import MatrixEntityPage from './pages/MatrixEntityPage';
 import TopicsPage from './pages/TopicsPage';
 import EditorPage from './pages/EditorPage';
 import { store } from './store';
@@ -30,7 +31,13 @@ export default function App() {
               <Route path="topics" element={<TopicsPage />} />
               <Route path="category/:l1" element={<CategoryPage />} />
               <Route path="category/:l1/:l2" element={<CategoryPage />} />
-              <Route path="tags/:slug" element={<TagPage />} />
+              <Route path="companies/:slug" element={<MatrixEntityPage matrixType="company" />} />
+              <Route path="tools/:slug" element={<MatrixEntityPage matrixType="tool" />} />
+              <Route
+                path="industries/:slug"
+                element={<MatrixEntityPage matrixType="industry" />}
+              />
+              <Route path="tags/:slug" element={<LegacyTagRedirect />} />
               <Route path={`${config.articlePath}/:slug`} element={<ArticlePage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

@@ -5,19 +5,43 @@ import ErrorState from '../components/ui/ErrorState';
 import SeoHead from '../seo/SeoHead';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadTaxonomy } from '../store/slices/taxonomySlice';
-import { config } from '../config';
+import { config, matrixUrl } from '../config';
 import { filterBrowseItems, flattenBrowseItems } from '../utils/taxonomy';
 
 const TYPE_LABELS = {
   category: 'Category',
   subcategory: 'Topic',
-  entity: 'Tag',
-  tag: 'Tag',
+  company: 'Company',
+  tool: 'Tool',
+  industry: 'Industry',
 };
+
+function MatrixBrowseSection({ title, matrixType, items }) {
+  if (!items.length) return null;
+  return (
+    <section className="topic-browse__section topic-browse__section--tags">
+      <h2 className="topic-browse__l1">{title}</h2>
+      <ul className="topic-browse__tag-grid">
+        {items.map((row) => (
+          <li key={row.slug}>
+            <Link to={matrixUrl(matrixType, row.slug)}>
+              {row.title}
+              {row.article_count != null && row.article_count > 0 && (
+                <span className="topic-browse__tag-count"> ({row.article_count})</span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 export default function TopicsPage() {
   const dispatch = useAppDispatch();
-  const { tree, tags, status, error } = useAppSelector((state) => state.taxonomy);
+  const { tree, companies, tools, industries, status, error } = useAppSelector(
+    (state) => state.taxonomy
+  );
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -26,20 +50,28 @@ export default function TopicsPage() {
     }
   }, [dispatch, status]);
 
+  const matrix = useMemo(
+    () => ({ companies, tools, industries }),
+    [companies, tools, industries]
+  );
+
   const allItems = useMemo(
-    () => (tree ? flattenBrowseItems(tree, tags) : []),
-    [tree, tags]
+    () => (tree ? flattenBrowseItems(tree, matrix) : []),
+    [tree, matrix]
   );
 
   const results = useMemo(() => filterBrowseItems(allItems, query), [allItems, query]);
+
+  const hasMatrix =
+    companies.length > 0 || tools.length > 0 || industries.length > 0;
 
   return (
     <>
       <SeoHead
         title="Browse topics"
-        description="Search categories, topics, and tags to find AI news that matches what you have in mind."
+        description="Search categories and the company, tool, and industry matrix to find AI news that matches what you have in mind."
         canonical={`${config.siteUrl}/topics`}
-        keywords={['AI topics', 'taxonomy', 'tags', 'categories']}
+        keywords={['AI topics', 'companies', 'tools', 'industries', 'categories']}
       />
 
       <div className="page page--topics">
@@ -52,8 +84,7 @@ export default function TopicsPage() {
         <header className="page-masthead page-masthead--compact">
           <h1 className="page-masthead__title">Browse topics</h1>
           <p className="page-masthead__dek">
-            Search by name or explore the category tree to find articles on tools, research, and
-            companies you care about.
+            Search by name or explore categories and the company, tool, and industry matrix.
           </p>
         </header>
 
@@ -63,7 +94,7 @@ export default function TopicsPage() {
           onSubmit={(e) => e.preventDefault()}
         >
           <label htmlFor="topic-search-input" className="visually-hidden">
-            Search topics, categories, and tags
+            Search topics, categories, companies, tools, and industries
           </label>
           <input
             id="topic-search-input"
@@ -134,22 +165,16 @@ export default function TopicsPage() {
               </section>
             ))}
 
-            {(tree?.entities?.length > 0 || tags.length > 0) && (
-              <section className="topic-browse__section topic-browse__section--tags">
-                <h2 className="topic-browse__l1">Tags &amp; entities</h2>
-                <ul className="topic-browse__tag-grid">
-                  {(tags.length ? tags : tree.entities).map((t) => (
-                    <li key={t.slug}>
-                      <Link to={`/tags/${t.slug}`}>
-                        {t.title}
-                        {t.article_count != null && t.article_count > 0 && (
-                          <span className="topic-browse__tag-count"> ({t.article_count})</span>
-                        )}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+            {hasMatrix && (
+              <>
+                <MatrixBrowseSection title="Companies" matrixType="company" items={companies} />
+                <MatrixBrowseSection title="Tools" matrixType="tool" items={tools} />
+                <MatrixBrowseSection
+                  title="Industries"
+                  matrixType="industry"
+                  items={industries}
+                />
+              </>
             )}
           </div>
         )}

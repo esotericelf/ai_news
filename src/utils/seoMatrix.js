@@ -46,8 +46,8 @@ function slugFromItem(item) {
   return null;
 }
 
-/** Deduplicated { label, slug } rows from companies / tools / industries arrays. */
-export function normalizeEntities(items) {
+/** Deduplicated { label, slug, matrixType } rows from matrix arrays. */
+export function normalizeEntities(items, matrixType) {
   const seen = new Set();
   const out = [];
   for (const raw of asArray(items)) {
@@ -56,7 +56,7 @@ export function normalizeEntities(items) {
     const key = label.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ label, slug: slugFromItem(raw) });
+    out.push({ label, slug: slugFromItem(raw), matrixType });
   }
   return out;
 }
@@ -115,8 +115,8 @@ export function articleExcerpt(article) {
 export function companyAndToolBadges(article) {
   if (!article) return [];
   return [
-    ...normalizeEntities(article.companies),
-    ...normalizeEntities(article.tools),
+    ...normalizeEntities(article.companies, 'company'),
+    ...normalizeEntities(article.tools, 'tool'),
   ];
 }
 
@@ -124,8 +124,8 @@ export function companyAndToolBadges(article) {
 export function seoMatrixLabels(article) {
   if (!article) return [];
   return [
-    ...normalizeEntities(article.companies),
-    ...normalizeEntities(article.tools),
-    ...normalizeEntities(article.industries),
+    ...normalizeEntities(article.companies, 'company'),
+    ...normalizeEntities(article.tools, 'tool'),
+    ...normalizeEntities(article.industries, 'industry'),
   ].map((e) => e.label);
 }

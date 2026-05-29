@@ -9,7 +9,7 @@
  * Controls (Netlify env or local):
  * - PRERENDER_NEWS_LIMIT: number of /news/:slug pages to prerender (default 100)
  * - PRERENDER_CATEGORY_LIMIT: number of /category pages (default 50; sitemap usually ~18-36)
- * - PRERENDER_TAG_LIMIT: number of /tags pages (default 30)
+ * - PRERENDER_MATRIX_LIMIT: number of matrix entity pages (default 30)
  * - PRERENDER_TOTAL_LIMIT: hard cap for all routes (default 250)
  */
 const fs = require('fs');
@@ -68,13 +68,19 @@ function pickRoutesFromSitemap({ sitemapXml, limits }) {
   const always = ['/', '/topics'];
 
   const categories = paths.filter((p) => p === '/topics' || p.startsWith('/category/'));
-  const tags = paths.filter((p) => p.startsWith('/tags/'));
+  const matrix = paths.filter(
+    (p) =>
+      p.startsWith('/companies/') ||
+      p.startsWith('/tools/') ||
+      p.startsWith('/industries/') ||
+      p.startsWith('/tags/')
+  );
   const news = paths.filter((p) => p.startsWith('/news/'));
 
   const picked = [];
   picked.push(...always);
   picked.push(...categories.slice(0, limits.category));
-  picked.push(...tags.slice(0, limits.tag));
+  picked.push(...matrix.slice(0, limits.matrix));
   picked.push(...news.slice(0, limits.news));
 
   const final = uniq(picked)
@@ -92,7 +98,7 @@ async function main() {
   const limits = {
     news: intEnv('PRERENDER_NEWS_LIMIT', 100),
     category: intEnv('PRERENDER_CATEGORY_LIMIT', 50),
-    tag: intEnv('PRERENDER_TAG_LIMIT', 30),
+    matrix: intEnv('PRERENDER_MATRIX_LIMIT', 30),
     total: intEnv('PRERENDER_TOTAL_LIMIT', 250),
   };
 
@@ -113,7 +119,7 @@ async function main() {
 
   console.log(
     `[prerender] Prerendering ${include.length} routes (limits: ` +
-      `news=${limits.news}, category=${limits.category}, tag=${limits.tag}, total=${limits.total})`
+      `news=${limits.news}, category=${limits.category}, matrix=${limits.matrix}, total=${limits.total})`
   );
 
   // Defer require so installs can finish before postbuild runs.

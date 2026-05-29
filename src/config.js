@@ -58,6 +58,22 @@ export function categoryUrl(l1Slug, l2Slug) {
   return l2Slug ? `/category/${l1Slug}/${l2Slug}` : `/category/${l1Slug}`;
 }
 
-export function tagUrl(slug) {
-  return `/tags/${slug}`;
+/** URL segment per matrix type (companies, tools, industries). */
+export const MATRIX_SEGMENTS = {
+  company: 'companies',
+  tool: 'tools',
+  industry: 'industries',
+};
+
+/** Published list query param per matrix type. */
+export const MATRIX_FILTER_PARAMS = {
+  company: 'company',
+  tool: 'tool',
+  industry: 'industry',
+};
+
+export function matrixUrl(matrixType, slug) {
+  const segment = MATRIX_SEGMENTS[matrixType];
+  if (!segment || !slug) return null;
+  return `/${segment}/${encodeURIComponent(slug)}`;
 }

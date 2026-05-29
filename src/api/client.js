@@ -4,7 +4,9 @@ import { buildApiUrl } from './http';
 function cacheUrlForApiPath(path, params) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   if (normalizedPath === '/api/taxonomy/') return '/seo-cache/taxonomy.json';
-  if (normalizedPath === '/api/tags/') return '/seo-cache/tags.json';
+  if (normalizedPath === '/api/companies/') return '/seo-cache/companies.json';
+  if (normalizedPath === '/api/tools/') return '/seo-cache/tools.json';
+  if (normalizedPath === '/api/industries/') return '/seo-cache/industries.json';
   if (normalizedPath.startsWith('/api/published/')) {
     // Detail: /api/published/<slug>/
     const m = normalizedPath.match(/^\/api\/published\/([^/]+)\/$/);

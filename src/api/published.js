@@ -9,9 +9,20 @@ export function fetchPublishedList({
   ordering = '-generated_at',
   category_l1,
   category_l2,
-  tag,
+  company,
+  tool,
+  industry,
 } = {}) {
-  return apiGet(PUBLISHED, { page, search, ordering, category_l1, category_l2, tag });
+  return apiGet(PUBLISHED, {
+    page,
+    search,
+    ordering,
+    category_l1,
+    category_l2,
+    company,
+    tool,
+    industry,
+  });
 }
 
 export function fetchPublishedBySlug(slug) {

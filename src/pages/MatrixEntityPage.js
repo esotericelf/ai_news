@@ -8,19 +8,32 @@ import SeoHead from '../seo/SeoHead';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticles } from '../store/slices/articlesSlice';
 import { loadTaxonomy } from '../store/slices/taxonomySlice';
-import { config, tagUrl } from '../config';
+import { config, MATRIX_FILTER_PARAMS, matrixUrl } from '../config';
 import { filterPublishedListArticles } from '../utils/article';
 
-export default function TagPage() {
+const PAGE_COPY = {
+  company: { label: 'Company', topicsHeading: 'Companies' },
+  tool: { label: 'Tool', topicsHeading: 'Tools' },
+  industry: { label: 'Industry', topicsHeading: 'Industries' },
+};
+
+export default function MatrixEntityPage({ matrixType }) {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const page = Number(searchParams.get('page')) || 1;
   const search = searchParams.get('search') || '';
+  const copy = PAGE_COPY[matrixType];
+  const filterParam = MATRIX_FILTER_PARAMS[matrixType];
 
   const dispatch = useAppDispatch();
-  const { tags, tree, status: taxonomyStatus } = useAppSelector((state) => state.taxonomy);
+  const { companies, tools, industries, status: taxonomyStatus } = useAppSelector(
+    (state) => state.taxonomy
+  );
   const { list, listStatus, listError, count, next, previous, currentPage } =
     useAppSelector((state) => state.articles);
+
+  const catalog =
+    matrixType === 'company' ? companies : matrixType === 'tool' ? tools : industries;
 
   useEffect(() => {
     if (taxonomyStatus === 'idle') {
@@ -29,19 +42,18 @@ export default function TagPage() {
   }, [dispatch, taxonomyStatus]);
 
   useEffect(() => {
-    dispatch(loadArticles({ page, search, tag: slug }));
-  }, [dispatch, page, search, slug]);
+    if (!filterParam || !slug) return;
+    dispatch(loadArticles({ page, search, [filterParam]: slug }));
+  }, [dispatch, page, search, slug, filterParam]);
 
-  const tagMeta = useMemo(() => {
-    const fromTags = tags.find((t) => t.slug === slug);
-    if (fromTags) return fromTags;
-    const fromTree = tree?.entities?.find((e) => e.slug === slug);
-    if (fromTree) return { ...fromTree, article_count: undefined };
+  const entityMeta = useMemo(() => {
+    const fromCatalog = catalog.find((row) => row.slug === slug);
+    if (fromCatalog) return fromCatalog;
     return { slug, title: slug.replace(/-/g, ' ') };
-  }, [tags, tree, slug]);
+  }, [catalog, slug]);
 
-  const title = tagMeta.title;
-  const path = tagUrl(slug);
+  const title = entityMeta.title;
+  const path = matrixUrl(matrixType, slug);
   const canonical =
     page > 1 || search
       ? `${config.siteUrl}${path}?${new URLSearchParams({
@@ -51,14 +63,15 @@ export default function TagPage() {
       : `${config.siteUrl}${path}`;
 
   const ready = filterPublishedListArticles(list);
+  const listFilters = filterParam && slug ? { page, search, [filterParam]: slug } : null;
 
   return (
     <>
       <SeoHead
         title={title}
-        description={`Articles tagged “${title}” — ${config.siteDescription}`}
+        description={`Articles about ${title} — ${config.siteDescription}`}
         canonical={canonical}
-        keywords={[title, 'AI', 'tag']}
+        keywords={[title, copy.label, 'AI']}
       />
 
       <div className="page page--tag">
@@ -70,16 +83,17 @@ export default function TagPage() {
           ]}
         />
         <header className="page-masthead page-masthead--compact">
+          <p className="article-eyebrow">{copy.label}</p>
           <h1 className="page-masthead__title">{title}</h1>
-          {tagMeta.article_count != null && (
-            <p className="page-masthead__dek">{tagMeta.article_count} articles</p>
+          {entityMeta.article_count != null && (
+            <p className="page-masthead__dek">{entityMeta.article_count} articles</p>
           )}
         </header>
 
         {listStatus === 'failed' && (
           <ErrorState
             message={listError}
-            onRetry={() => dispatch(loadArticles({ page, search, tag: slug }))}
+            onRetry={() => listFilters && dispatch(loadArticles(listFilters))}
           />
         )}
 

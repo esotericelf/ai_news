@@ -25,7 +25,6 @@ function haystack(article) {
     ...(article?.target_keywords || []),
     ...seoMatrixLabels(article),
     ...(article?.trending_keywords_used || []),
-    ...(src.entity_tags || []),
     src.content_category_l1,
     src.content_category_l2,
     src.title,
