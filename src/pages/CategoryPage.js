@@ -12,7 +12,7 @@ import { loadTaxonomy } from '../store/slices/taxonomySlice';
 import { config, categoryUrl } from '../config';
 import useClientSearchFeed from '../hooks/useClientSearchFeed';
 import useUrlSearch from '../hooks/useUrlSearch';
-import { filterPublishedListArticles } from '../utils/article';
+import { filterPublishedListArticles, filterSearchableArticles } from '../utils/article';
 import { findL1, findL2 } from '../utils/taxonomy';
 
 const CLIENT_SEARCH_FETCH_SIZE = 100;
@@ -78,11 +78,16 @@ export default function CategoryPage() {
         })}`
       : `${config.siteUrl}${canonicalPath}`;
 
+  const searchable = filterSearchableArticles(list);
   const ready = filterPublishedListArticles(list);
-  const { visible, isEmpty, pagination } = useClientSearchFeed({
-    articles: ready,
+  const feedArticles = hasSearch ? searchable : ready;
+  const searchLoading = hasSearch && listStatus !== 'succeeded' && listStatus !== 'failed';
+
+  const { visible, isEmpty, isSearchLoading, pagination } = useClientSearchFeed({
+    articles: feedArticles,
     searchQuery: query,
     page,
+    isLoading: searchLoading,
     apiCount: count,
     apiNext: next,
     apiPrevious: previous,
@@ -153,7 +158,7 @@ export default function CategoryPage() {
             {hasSearch && <SectionHeader title={`Results for “${display}”`} />}
             <ArticleList
               articles={visible}
-              loading={listStatus === 'loading'}
+              loading={listStatus === 'loading' || isSearchLoading}
               emptyMessage={
                 isEmpty
                   ? `No articles found matching “${display}” in this category.`

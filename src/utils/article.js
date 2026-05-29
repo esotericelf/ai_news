@@ -17,6 +17,11 @@ export function filterPublishedListArticles(articles) {
   return filterDisplayableArticles(filterPublicArticles(articles));
 }
 
+/** Client-side search pool: public articles only (no hero-image requirement). */
+export function filterSearchableArticles(articles) {
+  return filterPublicArticles(articles);
+}
+
 export function articleCategory(article) {
   const kw = article?.target_keywords?.[0];
   if (kw) return kw;

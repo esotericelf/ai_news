@@ -13,7 +13,7 @@ import SeoHead from '../seo/SeoHead';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticles } from '../store/slices/articlesSlice';
 import { config } from '../config';
-import { filterPublishedListArticles } from '../utils/article';
+import { filterPublishedListArticles, filterSearchableArticles } from '../utils/article';
 import { buildWebsiteJsonLd } from '../utils/seo';
 
 const CLIENT_SEARCH_FETCH_SIZE = 100;
@@ -47,11 +47,16 @@ export default function HomePage() {
     }
   }, [dispatch, page, hasSearch]);
 
+  const searchable = filterSearchableArticles(list);
   const ready = filterPublishedListArticles(list);
-  const { visible, isClientSearch, isEmpty, pagination } = useClientSearchFeed({
-    articles: ready,
+  const feedArticles = hasSearch ? searchable : ready;
+  const searchLoading = hasSearch && listStatus !== 'succeeded' && listStatus !== 'failed';
+
+  const { visible, isClientSearch, isEmpty, isSearchLoading, pagination } = useClientSearchFeed({
+    articles: feedArticles,
     searchQuery: query,
     page,
+    isLoading: searchLoading,
     apiCount: count,
     apiNext: next,
     apiPrevious: previous,
@@ -121,7 +126,7 @@ export default function HomePage() {
             )}
             <ArticleList
               articles={listArticles}
-              loading={listStatus === 'loading'}
+              loading={listStatus === 'loading' || isSearchLoading}
               leadArticle={lead}
               emptyMessage={
                 isEmpty

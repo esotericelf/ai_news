@@ -36,35 +36,21 @@ export function getArticleTags(article) {
 export function articleMatchesSearch(article, normalizedQuery) {
   if (!normalizedQuery) return true;
 
+  const title = (article?.seo_title || article?.source?.title || '').toLowerCase();
+  const description = (
+    article?.meta_description || articleExcerpt(article) || ''
+  ).toLowerCase();
   const tags = getArticleTags(article);
-  if (tags.some((tag) => tag.includes(normalizedQuery))) {
-    return true;
-  }
 
-  const fields = [
-    article?.seo_title,
-    article?.meta_description,
-    article?.source?.title,
-    articleExcerpt(article),
-  ]
-    .filter(Boolean)
-    .map((value) => String(value).toLowerCase());
+  const words = normalizedQuery.split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
 
-  const combined = [...fields, ...tags].join(' ');
-  if (combined.includes(normalizedQuery)) {
-    return true;
-  }
-
-  const terms = normalizedQuery.split(/\s+/).filter(Boolean);
-  if (terms.length > 1) {
-    return terms.every(
-      (term) =>
-        fields.some((field) => field.includes(term)) ||
-        tags.some((tag) => tag.includes(term))
-    );
-  }
-
-  return fields.some((field) => field.includes(normalizedQuery));
+  return words.every(
+    (word) =>
+      title.includes(word) ||
+      description.includes(word) ||
+      tags.some((tag) => tag.includes(word))
+  );
 }
 
 export function filterArticlesBySearch(articles, normalizedQuery) {
