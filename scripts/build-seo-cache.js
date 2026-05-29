@@ -154,8 +154,7 @@ async function main() {
       (p) =>
         p.startsWith('/companies/') ||
         p.startsWith('/tools/') ||
-        p.startsWith('/industries/') ||
-        p.startsWith('/tags/')
+        p.startsWith('/industries/')
     )
     .slice(0, limits.matrix);
   const newsPaths = paths.filter((p) => p.startsWith('/news/')).slice(0, limits.news);
@@ -181,7 +180,7 @@ async function main() {
     const segment = parts[0];
     const slug = parts[1];
     const qs = new URLSearchParams({ page: '1', ordering: '-generated_at' });
-    if (segment === 'companies' || segment === 'tags') qs.set('company', slug);
+    if (segment === 'companies') qs.set('company', slug);
     else if (segment === 'tools') qs.set('tool', slug);
     else if (segment === 'industries') qs.set('industry', slug);
     apiPaths.add(`/api/published/?${qs.toString()}`);

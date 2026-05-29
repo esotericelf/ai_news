@@ -4,13 +4,13 @@ import { fetchPublishedBySlug, fetchPublishedList } from '../../api/published';
 export const loadArticles = createAsyncThunk(
   'articles/loadList',
   async (
-    { page = 1, search = '', category_l1, category_l2, company, tool, industry } = {},
+    { page = 1, page_size, category_l1, category_l2, company, tool, industry } = {},
     { rejectWithValue }
   ) => {
     try {
       return await fetchPublishedList({
         page,
-        search,
+        page_size,
         ordering: '-generated_at',
         category_l1,
         category_l2,

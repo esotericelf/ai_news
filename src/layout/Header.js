@@ -1,11 +1,10 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import SiteSearch from '../components/navigation/SiteSearch';
 import TaxonomyNav from '../features/navigation/TaxonomyNav';
 import { config } from '../config';
 import HeaderAccount from './HeaderAccount';
 
 export default function Header() {
-  const [searchParams] = useSearchParams();
-  const q = searchParams.get('search') || '';
   const masthead = config.siteName.toUpperCase();
 
   return (
@@ -23,22 +22,7 @@ export default function Header() {
           {masthead}
         </Link>
         <div className="site-header__tools">
-          <form className="site-search" action="/" method="get" role="search">
-            <label htmlFor="site-search-input" className="visually-hidden">
-              Search articles
-            </label>
-            <input
-              id="site-search-input"
-              type="search"
-              name="search"
-              defaultValue={q}
-              placeholder="Search"
-              autoComplete="off"
-            />
-            <button type="submit" aria-label="Search">
-              →
-            </button>
-          </form>
+          <SiteSearch />
           <HeaderAccount />
         </div>
       </div>

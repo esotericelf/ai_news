@@ -5,7 +5,7 @@ const TRENDING = '/api/trending-keywords/';
 
 export function fetchPublishedList({
   page = 1,
-  search = '',
+  page_size,
   ordering = '-generated_at',
   category_l1,
   category_l2,
@@ -15,7 +15,7 @@ export function fetchPublishedList({
 } = {}) {
   return apiGet(PUBLISHED, {
     page,
-    search,
+    page_size,
     ordering,
     category_l1,
     category_l2,

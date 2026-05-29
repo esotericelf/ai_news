@@ -876,6 +876,13 @@ h4 {
 }
 
 /* —— Story cards —— */
+.story-section__empty {
+  margin: var(--space-lg) 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
 .story-card {
   border-top: 1px solid var(--border);
   padding-top: var(--space-lg);

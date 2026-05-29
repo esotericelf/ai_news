@@ -10,14 +10,18 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticles } from '../store/slices/articlesSlice';
 import { loadTaxonomy } from '../store/slices/taxonomySlice';
 import { config, categoryUrl } from '../config';
+import useClientSearchFeed from '../hooks/useClientSearchFeed';
+import useUrlSearch from '../hooks/useUrlSearch';
 import { filterPublishedListArticles } from '../utils/article';
 import { findL1, findL2 } from '../utils/taxonomy';
+
+const CLIENT_SEARCH_FETCH_SIZE = 100;
 
 export default function CategoryPage() {
   const { l1: l1Slug, l2: l2Slug } = useParams();
   const [searchParams] = useSearchParams();
   const page = Number(searchParams.get('page')) || 1;
-  const search = searchParams.get('search') || '';
+  const { query, display, hasSearch } = useUrlSearch();
 
   const dispatch = useAppDispatch();
   const { tree, status: taxonomyStatus } = useAppSelector((state) => state.taxonomy);
@@ -31,15 +35,29 @@ export default function CategoryPage() {
   }, [dispatch, taxonomyStatus]);
 
   useEffect(() => {
-    dispatch(
-      loadArticles({
-        page,
-        search,
-        category_l1: l1Slug,
-        category_l2: l2Slug || undefined,
-      })
-    );
-  }, [dispatch, page, search, l1Slug, l2Slug]);
+    if (hasSearch) {
+      dispatch(
+        loadArticles({
+          page: 1,
+          page_size: CLIENT_SEARCH_FETCH_SIZE,
+          category_l1: l1Slug,
+          category_l2: l2Slug || undefined,
+        })
+      );
+    }
+  }, [dispatch, hasSearch, l1Slug, l2Slug]);
+
+  useEffect(() => {
+    if (!hasSearch) {
+      dispatch(
+        loadArticles({
+          page,
+          category_l1: l1Slug,
+          category_l2: l2Slug || undefined,
+        })
+      );
+    }
+  }, [dispatch, page, hasSearch, l1Slug, l2Slug]);
 
   const l1 = useMemo(() => findL1(tree, l1Slug), [tree, l1Slug]);
   const l2 = useMemo(() => findL2(l1, l2Slug), [l1, l2Slug]);
@@ -53,14 +71,23 @@ export default function CategoryPage() {
 
   const canonicalPath = categoryUrl(l1Slug, l2Slug);
   const canonical =
-    page > 1 || search
+    page > 1 || hasSearch
       ? `${config.siteUrl}${canonicalPath}?${new URLSearchParams({
-          ...(search ? { search } : {}),
+          ...(hasSearch ? { search: display } : {}),
           ...(page > 1 ? { page: String(page) } : {}),
         })}`
       : `${config.siteUrl}${canonicalPath}`;
 
   const ready = filterPublishedListArticles(list);
+  const { visible, isEmpty, pagination } = useClientSearchFeed({
+    articles: ready,
+    searchQuery: query,
+    page,
+    apiCount: count,
+    apiNext: next,
+    apiPrevious: previous,
+    apiCurrentPage: currentPage,
+  });
   const pageTitle = parentLabel ? `${title} · ${parentLabel}` : title;
 
   const breadcrumbItems = [
@@ -111,8 +138,8 @@ export default function CategoryPage() {
             onRetry={() =>
               dispatch(
                 loadArticles({
-                  page,
-                  search,
+                  page: hasSearch ? 1 : page,
+                  page_size: hasSearch ? CLIENT_SEARCH_FETCH_SIZE : undefined,
                   category_l1: l1Slug,
                   category_l2: l2Slug || undefined,
                 })
@@ -123,15 +150,23 @@ export default function CategoryPage() {
 
         {listStatus !== 'failed' && (
           <>
-            {search && <SectionHeader title={`Results for “${search}”`} />}
-            <ArticleList articles={ready} loading={listStatus === 'loading'} />
+            {hasSearch && <SectionHeader title={`Results for “${display}”`} />}
+            <ArticleList
+              articles={visible}
+              loading={listStatus === 'loading'}
+              emptyMessage={
+                isEmpty
+                  ? `No articles found matching “${display}” in this category.`
+                  : null
+              }
+            />
             <Pagination
-              currentPage={currentPage}
-              hasNext={Boolean(next)}
-              hasPrevious={Boolean(previous)}
-              totalCount={count}
+              currentPage={pagination.currentPage}
+              hasNext={pagination.hasNext}
+              hasPrevious={pagination.hasPrevious}
+              totalCount={pagination.totalCount}
               basePath={canonicalPath}
-              extraParams={search ? { search } : {}}
+              extraParams={hasSearch ? { search: display } : {}}
             />
           </>
         )}

@@ -111,13 +111,21 @@ export function articleExcerpt(article) {
   return article?.meta_description || '';
 }
 
-/** Companies and tools only — used for inline card / header badges. */
-export function companyAndToolBadges(article) {
+/** Linked matrix entities for inline badges (companies, tools, industries). */
+export function matrixEntityBadges(article) {
   if (!article) return [];
   return [
     ...normalizeEntities(article.companies, 'company'),
     ...normalizeEntities(article.tools, 'tool'),
+    ...normalizeEntities(article.industries, 'industry'),
   ];
+}
+
+/** @deprecated Use matrixEntityBadges — kept for callers that only need companies/tools. */
+export function companyAndToolBadges(article) {
+  return matrixEntityBadges(article).filter(
+    (e) => e.matrixType === 'company' || e.matrixType === 'tool'
+  );
 }
 
 /** Flat labels for search / partner CTA / related-article matching. */

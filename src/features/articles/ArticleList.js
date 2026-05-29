@@ -2,7 +2,7 @@ import ArticleCard from './ArticleCard';
 import SectionHeader from '../../components/ui/SectionHeader';
 import { SkeletonCard } from '../../components/ui/Skeleton';
 
-export default function ArticleList({ articles, loading, leadArticle }) {
+export default function ArticleList({ articles, loading, leadArticle, emptyMessage }) {
   const rest = leadArticle
     ? articles.filter((a) => a.slug !== leadArticle.slug)
     : articles;
@@ -20,7 +20,12 @@ export default function ArticleList({ articles, loading, leadArticle }) {
     );
   }
 
-  if (!rest.length) return null;
+  if (!rest.length) {
+    if (emptyMessage) {
+      return <p className="story-section__empty">{emptyMessage}</p>;
+    }
+    return null;
+  }
 
   const [first, ...others] = rest;
 

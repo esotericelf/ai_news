@@ -6,6 +6,8 @@ import SectionHeader from '../components/ui/SectionHeader';
 import ArticleHero from '../features/articles/ArticleHero';
 import ArticleList from '../features/articles/ArticleList';
 import TrendingTags from '../features/trending/TrendingTags';
+import useClientSearchFeed from '../hooks/useClientSearchFeed';
+import useUrlSearch from '../hooks/useUrlSearch';
 import JsonLd from '../seo/JsonLd';
 import SeoHead from '../seo/SeoHead';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -13,6 +15,8 @@ import { loadArticles } from '../store/slices/articlesSlice';
 import { config } from '../config';
 import { filterPublishedListArticles } from '../utils/article';
 import { buildWebsiteJsonLd } from '../utils/seo';
+
+const CLIENT_SEARCH_FETCH_SIZE = 100;
 
 function buildHomeCanonical(siteUrl, { search, page }) {
   const params = new URLSearchParams();
@@ -25,22 +29,41 @@ function buildHomeCanonical(siteUrl, { search, page }) {
 export default function HomePage() {
   const [searchParams] = useSearchParams();
   const page = Number(searchParams.get('page')) || 1;
-  const search = searchParams.get('search') || '';
+  const { query, display, hasSearch } = useUrlSearch();
 
   const dispatch = useAppDispatch();
   const { list, listStatus, listError, count, next, previous, currentPage } =
     useAppSelector((state) => state.articles);
 
   useEffect(() => {
-    dispatch(loadArticles({ page, search }));
-  }, [dispatch, page, search]);
+    if (hasSearch) {
+      dispatch(loadArticles({ page: 1, page_size: CLIENT_SEARCH_FETCH_SIZE }));
+    }
+  }, [dispatch, hasSearch, query]);
+
+  useEffect(() => {
+    if (!hasSearch) {
+      dispatch(loadArticles({ page }));
+    }
+  }, [dispatch, page, hasSearch]);
 
   const ready = filterPublishedListArticles(list);
-  const lead = !search && page === 1 ? ready[0] : null;
+  const { visible, isClientSearch, isEmpty, pagination } = useClientSearchFeed({
+    articles: ready,
+    searchQuery: query,
+    page,
+    apiCount: count,
+    apiNext: next,
+    apiPrevious: previous,
+    apiCurrentPage: currentPage,
+  });
 
-  const pageTitle = search ? `Search: ${search}` : 'Latest AI News';
-  const pageDesc = search
-    ? `Articles about “${search}” — ${config.siteDescription}`
+  const lead = !hasSearch && page === 1 ? visible[0] : null;
+  const listArticles = lead ? visible.filter((a) => a.slug !== lead.slug) : visible;
+
+  const pageTitle = hasSearch ? `Search: ${display}` : 'Latest AI News';
+  const pageDesc = hasSearch
+    ? `Articles about “${display}” — ${config.siteDescription}`
     : config.siteDescription;
 
   return (
@@ -48,22 +71,22 @@ export default function HomePage() {
       <SeoHead
         title={pageTitle}
         description={pageDesc}
-        canonical={buildHomeCanonical(config.siteUrl, { search, page })}
-        keywords={search ? [search, 'AI', 'technology'] : ['artificial intelligence', 'AI news']}
+        canonical={buildHomeCanonical(config.siteUrl, { search: display, page })}
+        keywords={hasSearch ? [display, 'AI', 'technology'] : ['artificial intelligence', 'AI news']}
       />
       <JsonLd data={buildWebsiteJsonLd()} />
 
       <div className="page page--home">
-        {!search && page === 1 && (
+        {!hasSearch && page === 1 && (
           <header className="page-masthead">
             <h1 className="page-masthead__title">The Latest in AI &amp; Technology</h1>
             <p className="page-masthead__dek">{config.siteDescription}</p>
           </header>
         )}
 
-        {search && (
+        {hasSearch && (
           <header className="page-masthead page-masthead--compact">
-            <SectionHeader title={`Results for “${search}”`} />
+            <SectionHeader title={`Results for “${display}”`} />
           </header>
         )}
 
@@ -78,7 +101,13 @@ export default function HomePage() {
         {listStatus === 'failed' && (
           <ErrorState
             message={listError}
-            onRetry={() => dispatch(loadArticles({ page, search }))}
+            onRetry={() =>
+              dispatch(
+                hasSearch
+                  ? loadArticles({ page: 1, page_size: CLIENT_SEARCH_FETCH_SIZE })
+                  : loadArticles({ page })
+              )
+            }
           />
         )}
 
@@ -91,16 +120,23 @@ export default function HomePage() {
               </>
             )}
             <ArticleList
-              articles={ready}
+              articles={listArticles}
               loading={listStatus === 'loading'}
               leadArticle={lead}
+              emptyMessage={
+                isEmpty
+                  ? `No articles found matching “${display}”. Try a different keyword or browse topics.`
+                  : null
+              }
             />
-            <Pagination
-              currentPage={currentPage}
-              hasNext={Boolean(next)}
-              hasPrevious={Boolean(previous)}
-              totalCount={count}
-            />
+            {(isClientSearch ? pagination.totalCount > 0 : pagination.hasNext || pagination.hasPrevious) && (
+              <Pagination
+                currentPage={pagination.currentPage}
+                hasNext={pagination.hasNext}
+                hasPrevious={pagination.hasPrevious}
+                totalCount={pagination.totalCount}
+              />
+            )}
           </>
         )}
       </div>

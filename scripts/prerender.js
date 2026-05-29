@@ -72,8 +72,7 @@ function pickRoutesFromSitemap({ sitemapXml, limits }) {
     (p) =>
       p.startsWith('/companies/') ||
       p.startsWith('/tools/') ||
-      p.startsWith('/industries/') ||
-      p.startsWith('/tags/')
+      p.startsWith('/industries/')
   );
   const news = paths.filter((p) => p.startsWith('/news/'));
 

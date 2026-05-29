@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import ArticleImage from '../components/ui/ArticleImage';
 import Breadcrumbs from '../components/ui/Breadcrumbs';
 import ErrorState from '../components/ui/ErrorState';
-import Tag from '../components/ui/Tag';
 import ArticleBody from '../features/articles/ArticleBody';
 import ArticleMatrixBadges from '../features/articles/ArticleMatrixBadges';
 import ArticleSeoMatrix from '../features/articles/ArticleSeoMatrix';
@@ -106,15 +105,6 @@ export default function ArticlePage() {
             <h1 itemProp="headline">{title}</h1>
             <ArticleMatrixBadges article={article} />
             <ArticleMeta article={article} />
-            {keywords.length > 0 && (
-              <ul className="article-header__tags" aria-label="Topics">
-                {keywords.map((kw) => (
-                  <li key={kw}>
-                    <Tag label={kw} />
-                  </li>
-                ))}
-              </ul>
-            )}
             <ArticleSharePopover url={canonical} title={title} className="article-header__share" />
           </header>
 

@@ -4,6 +4,8 @@ import Breadcrumbs from '../components/ui/Breadcrumbs';
 import ErrorState from '../components/ui/ErrorState';
 import Pagination from '../components/ui/Pagination';
 import ArticleList from '../features/articles/ArticleList';
+import useClientSearchFeed from '../hooks/useClientSearchFeed';
+import useUrlSearch from '../hooks/useUrlSearch';
 import SeoHead from '../seo/SeoHead';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticles } from '../store/slices/articlesSlice';
@@ -17,11 +19,13 @@ const PAGE_COPY = {
   industry: { label: 'Industry', topicsHeading: 'Industries' },
 };
 
+const CLIENT_SEARCH_FETCH_SIZE = 100;
+
 export default function MatrixEntityPage({ matrixType }) {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const page = Number(searchParams.get('page')) || 1;
-  const search = searchParams.get('search') || '';
+  const { query, display, hasSearch } = useUrlSearch();
   const copy = PAGE_COPY[matrixType];
   const filterParam = MATRIX_FILTER_PARAMS[matrixType];
 
@@ -43,8 +47,21 @@ export default function MatrixEntityPage({ matrixType }) {
 
   useEffect(() => {
     if (!filterParam || !slug) return;
-    dispatch(loadArticles({ page, search, [filterParam]: slug }));
-  }, [dispatch, page, search, slug, filterParam]);
+    if (hasSearch) {
+      dispatch(
+        loadArticles({
+          page: 1,
+          page_size: CLIENT_SEARCH_FETCH_SIZE,
+          [filterParam]: slug,
+        })
+      );
+    }
+  }, [dispatch, hasSearch, slug, filterParam]);
+
+  useEffect(() => {
+    if (!filterParam || !slug || hasSearch) return;
+    dispatch(loadArticles({ page, [filterParam]: slug }));
+  }, [dispatch, page, hasSearch, slug, filterParam]);
 
   const entityMeta = useMemo(() => {
     const fromCatalog = catalog.find((row) => row.slug === slug);
@@ -55,15 +72,32 @@ export default function MatrixEntityPage({ matrixType }) {
   const title = entityMeta.title;
   const path = matrixUrl(matrixType, slug);
   const canonical =
-    page > 1 || search
+    page > 1 || hasSearch
       ? `${config.siteUrl}${path}?${new URLSearchParams({
-          ...(search ? { search } : {}),
+          ...(hasSearch ? { search: display } : {}),
           ...(page > 1 ? { page: String(page) } : {}),
         })}`
       : `${config.siteUrl}${path}`;
 
   const ready = filterPublishedListArticles(list);
-  const listFilters = filterParam && slug ? { page, search, [filterParam]: slug } : null;
+  const { visible, isEmpty, pagination } = useClientSearchFeed({
+    articles: ready,
+    searchQuery: query,
+    page,
+    apiCount: count,
+    apiNext: next,
+    apiPrevious: previous,
+    apiCurrentPage: currentPage,
+  });
+
+  const listFilters =
+    filterParam && slug
+      ? {
+          page: hasSearch ? 1 : page,
+          page_size: hasSearch ? CLIENT_SEARCH_FETCH_SIZE : undefined,
+          [filterParam]: slug,
+        }
+      : null;
 
   return (
     <>
@@ -99,14 +133,20 @@ export default function MatrixEntityPage({ matrixType }) {
 
         {listStatus !== 'failed' && (
           <>
-            <ArticleList articles={ready} loading={listStatus === 'loading'} />
+            <ArticleList
+              articles={visible}
+              loading={listStatus === 'loading'}
+              emptyMessage={
+                isEmpty ? `No articles found matching “${display}”.` : null
+              }
+            />
             <Pagination
-              currentPage={currentPage}
-              hasNext={Boolean(next)}
-              hasPrevious={Boolean(previous)}
-              totalCount={count}
+              currentPage={pagination.currentPage}
+              hasNext={pagination.hasNext}
+              hasPrevious={pagination.hasPrevious}
+              totalCount={pagination.totalCount}
               basePath={path}
-              extraParams={search ? { search } : {}}
+              extraParams={hasSearch ? { search: display } : {}}
             />
           </>
         )}

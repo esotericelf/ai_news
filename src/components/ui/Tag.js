@@ -8,7 +8,9 @@ export default function Tag({ label, slug, matrixType, asLink = true }) {
     return <span className="tag">{text}</span>;
   }
   const to =
-    slug && matrixType ? matrixUrl(matrixType, slug) : `/?search=${encodeURIComponent(text)}`;
+    slug && matrixType
+      ? matrixUrl(matrixType, slug)
+      : { pathname: '/', search: `?search=${encodeURIComponent(text)}` };
   return (
     <Link to={to} className="tag">
       {text}
