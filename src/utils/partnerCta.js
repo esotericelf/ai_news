@@ -1,4 +1,5 @@
 import { partnerCtaConfig } from '../config/partnerCta';
+import { seoMatrixLabels } from './seoMatrix';
 
 const RULES = [
   {
@@ -22,6 +23,7 @@ function haystack(article) {
     article?.seo_title,
     article?.meta_description,
     ...(article?.target_keywords || []),
+    ...seoMatrixLabels(article),
     ...(article?.trending_keywords_used || []),
     ...(src.entity_tags || []),
     src.content_category_l1,

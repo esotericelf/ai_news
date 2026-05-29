@@ -2,13 +2,15 @@ import { Link } from 'react-router-dom';
 import { absoluteArticleUrl, articleUrl } from '../../config';
 import ArticleSharePopover from './ArticleSharePopover';
 import ArticleImage from '../../components/ui/ArticleImage';
-import { articleCategory, articleTitle } from '../../utils/article';
+import { articleCategory } from '../../utils/article';
+import { articleExcerpt } from '../../utils/seoMatrix';
 import { formatRelativeDate } from '../../utils/format';
+import ArticleMatrixBadges from './ArticleMatrixBadges';
 
 export default function ArticleCard({ article, variant = 'default' }) {
-  const title = articleTitle(article);
+  const title = article.seo_title || 'Untitled';
   const category = articleCategory(article);
-  const excerpt = article.meta_description;
+  const excerpt = articleExcerpt(article);
   const date = article.source?.published_at || article.generated_at;
   return (
     <article className={`story-card story-card--${variant}`}>
@@ -25,6 +27,7 @@ export default function ArticleCard({ article, variant = 'default' }) {
         <div className="story-card__body">
           <span className="story-card__category">{category}</span>
           <h2 className="story-card__title">{title}</h2>
+          <ArticleMatrixBadges article={article} />
           <p className="story-card__dek">{excerpt}</p>
           <footer className="story-card__meta">
             <time dateTime={date}>{formatRelativeDate(date)}</time>

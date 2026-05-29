@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
 import { articleUrl } from '../../config';
 import ArticleImage from '../../components/ui/ArticleImage';
-import { articleCategory, articleTitle } from '../../utils/article';
+import { articleCategory } from '../../utils/article';
+import { articleExcerpt } from '../../utils/seoMatrix';
 import { formatDate } from '../../utils/format';
+import ArticleMatrixBadges from './ArticleMatrixBadges';
 
 export default function ArticleHero({ article }) {
   if (!article) return null;
 
-  const title = articleTitle(article);
+  const title = article.seo_title || 'Untitled';
   const category = articleCategory(article);
   const date = article.source?.published_at || article.generated_at;
   return (
@@ -21,7 +23,8 @@ export default function ArticleHero({ article }) {
           <h2 id="featured-article-title" className="lead-story__title">
             {title}
           </h2>
-          <p className="lead-story__dek">{article.meta_description}</p>
+          <ArticleMatrixBadges article={article} />
+          <p className="lead-story__dek">{articleExcerpt(article)}</p>
           <div className="lead-story__meta">
             <time dateTime={date}>{formatDate(date)}</time>
             {article.read_time_minutes && (

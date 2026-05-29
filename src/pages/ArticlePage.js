@@ -5,6 +5,8 @@ import Breadcrumbs from '../components/ui/Breadcrumbs';
 import ErrorState from '../components/ui/ErrorState';
 import Tag from '../components/ui/Tag';
 import ArticleBody from '../features/articles/ArticleBody';
+import ArticleMatrixBadges from '../features/articles/ArticleMatrixBadges';
+import ArticleSeoMatrix from '../features/articles/ArticleSeoMatrix';
 import ArticleMeta from '../features/articles/ArticleMeta';
 import ArticlePartnerCta from '../features/articles/ArticlePartnerCta';
 import ArticleSharePopover from '../features/articles/ArticleSharePopover';
@@ -16,7 +18,8 @@ import { absoluteArticleUrl, config } from '../config';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticleBySlug, loadArticles } from '../store/slices/articlesSlice';
 import { buildArticleJsonLd, buildBreadcrumbJsonLd } from '../utils/seo';
-import { articleCategory, articleTitle, resolveArticleImageUrl } from '../utils/article';
+import { articleCategory, resolveArticleImageUrl } from '../utils/article';
+import { seoMatrixLabels } from '../utils/seoMatrix';
 
 export default function ArticlePage() {
   const { slug } = useParams();
@@ -62,10 +65,12 @@ export default function ArticlePage() {
     );
   }
 
-  const title = articleTitle(article);
+  const title = article.seo_title || 'Untitled';
   const category = articleCategory(article);
   const canonical = absoluteArticleUrl(article.slug);
-  const keywords = article.target_keywords || [];
+  const keywords = [
+    ...new Set([...(article.target_keywords || []), ...seoMatrixLabels(article)]),
+  ];
   const imageUrl = resolveArticleImageUrl(article);
 
   const jsonLd = [
@@ -99,6 +104,7 @@ export default function ArticlePage() {
           <header className="article-header">
             <span className="article-eyebrow">{category}</span>
             <h1 itemProp="headline">{title}</h1>
+            <ArticleMatrixBadges article={article} />
             <ArticleMeta article={article} />
             {keywords.length > 0 && (
               <ul className="article-header__tags" aria-label="Topics">
@@ -123,6 +129,7 @@ export default function ArticlePage() {
           </figure>
 
           <div className="article-geo__content">
+            <ArticleSeoMatrix article={article} />
             <ArticleBody html={article.body_html} />
           </div>
 

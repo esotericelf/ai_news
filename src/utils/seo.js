@@ -1,5 +1,32 @@
 import { absoluteArticleUrl, config } from '../config';
 import { resolveArticleImageUrl } from './image';
+import {
+  normalizeEntities,
+  normalizeKeyMetrics,
+  normalizeThreeSentenceSummary,
+  seoMatrixLabels,
+} from './seoMatrix';
+
+function buildArticleMentions(article) {
+  const companies = normalizeEntities(article?.companies).map((c) => ({
+    '@type': 'Organization',
+    name: c.label,
+  }));
+  const tools = normalizeEntities(article?.tools).map((t) => ({
+    '@type': 'SoftwareApplication',
+    name: t.label,
+  }));
+  const mentions = [...companies, ...tools];
+  return mentions.length ? mentions : undefined;
+}
+
+function buildArticleAbout(article) {
+  const industries = normalizeEntities(article?.industries).map((i) => ({
+    '@type': 'Thing',
+    name: i.label,
+  }));
+  return industries.length ? industries : undefined;
+}
 
 export function buildArticleJsonLd(article) {
   const url = absoluteArticleUrl(article.slug);
@@ -7,12 +34,18 @@ export function buildArticleJsonLd(article) {
   const datePublished =
     article.source?.published_at || article.generated_at || undefined;
   const dateModified = article.updated_at || article.generated_at || undefined;
+  const summary = normalizeThreeSentenceSummary(article?.three_sentence_summary);
+  const abstractText = summary.length ? summary.join(' ') : undefined;
+  const matrixKeywords = seoMatrixLabels(article);
+  const keywordList = [...(article.target_keywords || []), ...matrixKeywords];
+  const metrics = normalizeKeyMetrics(article?.key_metrics);
 
   return {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
     headline: article.seo_title || article.source?.title,
-    description: article.meta_description,
+    description: abstractText || article.meta_description,
+    abstract: abstractText,
     image: image ? [image] : undefined,
     datePublished,
     dateModified,
@@ -33,8 +66,17 @@ export function buildArticleJsonLd(article) {
       '@id': url,
     },
     url,
-    keywords: (article.target_keywords || []).join(', '),
+    keywords: keywordList.length ? [...new Set(keywordList)].join(', ') : undefined,
+    mentions: buildArticleMentions(article),
+    about: buildArticleAbout(article),
     isAccessibleForFree: true,
+    ...(metrics.length > 0 && {
+      additionalProperty: metrics.map((m) => ({
+        '@type': 'PropertyValue',
+        name: m.label,
+        value: m.value || m.label,
+      })),
+    }),
   };
 }
 

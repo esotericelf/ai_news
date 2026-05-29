@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ArticleBody from '../features/articles/ArticleBody';
+import ArticleMatrixBadges from '../features/articles/ArticleMatrixBadges';
+import ArticleSeoMatrix from '../features/articles/ArticleSeoMatrix';
 import ArticleSharePopover from '../features/articles/ArticleSharePopover';
 import {
   approveComment,
@@ -482,7 +484,8 @@ export default function EditorPage() {
                       {detail.source_title}
                     </a>
                   </p>
-                  <h1>{detail.seo_title}</h1>
+                  <h1>{detail.seo_title || 'Untitled'}</h1>
+                  <ArticleMatrixBadges article={detail} />
                   <p className="editor-article__meta">{detail.meta_description}</p>
                   {detail.slug && (
                     <ArticleSharePopover
@@ -509,6 +512,9 @@ export default function EditorPage() {
                       <span className="editor-preview__slug-path">{articleUrl(detail.slug)}</span>
                     </p>
                   )}
+                  <h2 className="editor-article__label">SEO matrix</h2>
+                  <ArticleSeoMatrix article={detail} />
+
                   <h2 className="editor-article__label">
                     {showPreviousBody ? 'After revision' : 'Live preview'}
                   </h2>
