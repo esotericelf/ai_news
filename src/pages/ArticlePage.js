@@ -120,12 +120,16 @@ export default function ArticlePage() {
           </figure>
 
           <div className="article-geo__layout">
-            <div className="article-geo__main">
-              <div className="article-geo__content">
-                <ArticleSeoMatrix article={article} />
-                <ArticleBody html={article.body_html} />
-              </div>
+            <div className="article-geo__content">
+              <ArticleSeoMatrix article={article} />
+              <ArticleBody html={article.body_html} />
+            </div>
 
+            <div className="article-geo__topics">
+              <RelationalKeywordMatrix article={article} />
+            </div>
+
+            <div className="article-geo__tail">
               <ArticlePartnerCta article={article} />
 
               <footer className="article-footer">
@@ -146,10 +150,6 @@ export default function ArticlePage() {
                 currentSlug={article.slug}
                 keywords={keywords}
               />
-            </div>
-
-            <div className="article-geo__sidebar">
-              <RelationalKeywordMatrix article={article} />
             </div>
           </div>
         </div>
