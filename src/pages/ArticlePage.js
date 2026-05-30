@@ -125,26 +125,30 @@ export default function ArticlePage() {
               <ArticleBody html={article.body_html} />
             </div>
 
-            <div className="article-geo__topics">
+            <aside className="article-geo__topics" aria-label="Related topics">
               <RelationalKeywordMatrix article={article} />
+            </aside>
+
+            <div className="article-geo__partner">
+              <ArticlePartnerCta article={article} />
             </div>
 
-            <div className="article-geo__tail">
-              <ArticlePartnerCta article={article} />
+            <footer className="article-footer article-geo__footer">
+              <p className="article-footer__attribution">
+                Summary based on reporting from the original publisher.{' '}
+                {article.canonical_url && (
+                  <a href={article.canonical_url} rel="noopener noreferrer" target="_blank">
+                    Read original article
+                  </a>
+                )}
+              </p>
+            </footer>
 
-              <footer className="article-footer">
-                <p className="article-footer__attribution">
-                  Summary based on reporting from the original publisher.{' '}
-                  {article.canonical_url && (
-                    <a href={article.canonical_url} rel="noopener noreferrer" target="_blank">
-                      Read original article
-                    </a>
-                  )}
-                </p>
-              </footer>
-
+            <div className="article-geo__comments">
               <CommentsSection slug={article.slug} seoArticleId={article.id} />
+            </div>
 
+            <div className="article-geo__related">
               <RelatedArticles
                 articles={list}
                 currentSlug={article.slug}
