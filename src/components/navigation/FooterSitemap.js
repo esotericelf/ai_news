@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FOOTER_SITEMAP_SECTIONS } from '../../config/siteDirectory';
-import { SitemapTreeBranch, SitemapTreeLink } from './SitemapTree';
+import { SitemapTreeLink } from './SitemapTree';
 
 function SitemapSection({ section }) {
   return (
