@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { config } from '../config';
 import { filterArticlesBySearch, paginateArticles } from '../utils/search';
 
@@ -6,12 +6,16 @@ import { filterArticlesBySearch, paginateArticles } from '../utils/search';
  * Applies client-side search + pagination on top of a fetched article list.
  * Waits for `isLoading` to finish before filtering so direct URL search
  * does not flash empty results on an empty pre-fetch list.
+ *
+ * When `useServerResults` is true, the articles array is treated as already
+ * filtered by the backend search endpoint (hybrid fallback).
  */
 export default function useClientSearchFeed({
   articles,
   searchQuery,
   page,
   isLoading = false,
+  useServerResults = false,
   apiCount,
   apiNext,
   apiPrevious,
@@ -24,8 +28,9 @@ export default function useClientSearchFeed({
   const filtered = useMemo(() => {
     if (!isClientSearch) return articles || [];
     if (isLoading) return [];
+    if (useServerResults) return articles || [];
     return filterArticlesBySearch(articles, searchQuery);
-  }, [articles, searchQuery, isClientSearch, isLoading]);
+  }, [articles, searchQuery, isClientSearch, isLoading, useServerResults]);
 
   const visible = useMemo(() => {
     if (!isClientSearch) return articles || [];
@@ -58,12 +63,6 @@ export default function useClientSearchFeed({
     apiPrevious,
     apiCount,
   ]);
-
-  useEffect(() => {
-    if (isClientSearch && searchReady) {
-      console.log('Raw Articles:', articles, 'Search Query:', searchQuery);
-    }
-  }, [isClientSearch, searchReady, articles, searchQuery, filtered]);
 
   return {
     visible,

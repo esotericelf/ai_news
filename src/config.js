@@ -43,6 +43,8 @@ export const config = {
     'Curated artificial intelligence and technology news, optimized for clarity and discovery.',
   gaMeasurementId: process.env.REACT_APP_GA_MEASUREMENT_ID || 'G-TCT20QCCWS',
   articlesPerPage: 12,
+  /** Articles fetched for client-side search before optional server fallback. */
+  clientSearchFetchSize: 200,
   articlePath: '/news',
 };
 

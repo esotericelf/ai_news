@@ -4,13 +4,14 @@ import { fetchPublishedBySlug, fetchPublishedList } from '../../api/published';
 export const loadArticles = createAsyncThunk(
   'articles/loadList',
   async (
-    { page = 1, page_size, category_l1, category_l2, company, tool, industry } = {},
+    { page = 1, page_size, search, category_l1, category_l2, company, tool, industry } = {},
     { rejectWithValue }
   ) => {
     try {
       return await fetchPublishedList({
         page,
         page_size,
+        search,
         ordering: '-generated_at',
         category_l1,
         category_l2,
@@ -20,6 +21,34 @@ export const loadArticles = createAsyncThunk(
       });
     } catch (err) {
       return rejectWithValue(err.message || 'Failed to load articles');
+    }
+  }
+);
+
+/** Server-side search fallback when client-side filtering finds no matches. */
+export const loadArticlesServerSearch = createAsyncThunk(
+  'articles/loadServerSearch',
+  async (
+    { search, page = 1, page_size, category_l1, category_l2, company, tool, industry } = {},
+    { rejectWithValue }
+  ) => {
+    if (!search?.trim()) {
+      return rejectWithValue('Search query is required');
+    }
+    try {
+      return await fetchPublishedList({
+        page,
+        page_size,
+        search: search.trim(),
+        ordering: '-generated_at',
+        category_l1,
+        category_l2,
+        company,
+        tool,
+        industry,
+      });
+    } catch (err) {
+      return rejectWithValue(err.message || 'Failed to search articles');
     }
   }
 );
@@ -46,6 +75,12 @@ const articlesSlice = createSlice({
     listError: null,
     currentPage: 1,
     search: '',
+    serverSearch: {
+      query: '',
+      list: [],
+      status: 'idle',
+      error: null,
+    },
     bySlug: {},
     detailStatus: 'idle',
     detailError: null,
@@ -57,6 +92,14 @@ const articlesSlice = createSlice({
     clearCurrentArticle(state) {
       state.detailStatus = 'idle';
       state.detailError = null;
+    },
+    clearServerSearch(state) {
+      state.serverSearch = {
+        query: '',
+        list: [],
+        status: 'idle',
+        error: null,
+      };
     },
   },
   extraReducers: (builder) => {
@@ -80,6 +123,21 @@ const articlesSlice = createSlice({
         state.listStatus = 'failed';
         state.listError = action.payload || 'Failed to load articles';
       })
+      .addCase(loadArticlesServerSearch.pending, (state, action) => {
+        state.serverSearch.status = 'loading';
+        state.serverSearch.query = action.meta.arg.search?.trim() || '';
+        state.serverSearch.error = null;
+      })
+      .addCase(loadArticlesServerSearch.fulfilled, (state, action) => {
+        state.serverSearch.status = 'succeeded';
+        const payload = action.payload;
+        state.serverSearch.list = payload.results ?? payload;
+      })
+      .addCase(loadArticlesServerSearch.rejected, (state, action) => {
+        state.serverSearch.status = 'failed';
+        state.serverSearch.error = action.payload || 'Failed to search articles';
+        state.serverSearch.list = [];
+      })
       .addCase(loadArticleBySlug.pending, (state) => {
         state.detailStatus = 'loading';
         state.detailError = null;
@@ -96,5 +154,5 @@ const articlesSlice = createSlice({
   },
 });
 
-export const { setSearch, clearCurrentArticle } = articlesSlice.actions;
+export const { setSearch, clearCurrentArticle, clearServerSearch } = articlesSlice.actions;
 export default articlesSlice.reducer;

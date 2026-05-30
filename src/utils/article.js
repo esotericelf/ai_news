@@ -1,4 +1,5 @@
 import { filterDisplayableArticles, hasDisplayImage, resolveArticleImageUrl } from './image';
+import { enrichArticlesForSearch } from './search';
 
 export { filterDisplayableArticles, hasDisplayImage, resolveArticleImageUrl };
 
@@ -19,7 +20,7 @@ export function filterPublishedListArticles(articles) {
 
 /** Client-side search pool: public articles only (no hero-image requirement). */
 export function filterSearchableArticles(articles) {
-  return filterPublicArticles(articles);
+  return enrichArticlesForSearch(filterPublicArticles(articles));
 }
 
 export function articleCategory(article) {
