@@ -63,10 +63,11 @@ export default function useClientSearchFeed({
     if (isClientSearch && searchReady) {
       console.log('Raw Articles:', articles, 'Search Query:', searchQuery);
     }
-  }, [isClientSearch, searchReady, articles, searchQuery]);
+  }, [isClientSearch, searchReady, articles, searchQuery, filtered]);
 
   return {
     visible,
+    filtered,
     filteredCount: filtered.length,
     isClientSearch,
     searchReady,

@@ -1,4 +1,4 @@
-import { articleExcerpt, seoMatrixLabels } from './seoMatrix';
+import { seoMatrixLabels } from './seoMatrix';
 
 /** Decode and normalize a search string from the URL or form input. */
 export function normalizeSearchQuery(raw) {
@@ -22,34 +22,38 @@ export function parseSearchDisplay(raw) {
   }
 }
 
-/** Tags/keywords attached to an article for client-side search. */
-export function getArticleTags(article) {
+/** Display labels from an article's tag / keyword fields. */
+export function getArticleKeywordLabels(article) {
   const raw = [
     ...(Array.isArray(article?.tags) ? article.tags : []),
     ...(article?.target_keywords || []),
     ...(article?.trending_keywords_used || []),
     ...seoMatrixLabels(article),
   ];
-  return raw.map((tag) => String(tag).toLowerCase().trim()).filter(Boolean);
+  return raw.map((tag) => String(tag).trim()).filter(Boolean);
 }
 
+/** Tags/keywords attached to an article for client-side search (lowercase). */
+export function getArticleTags(article) {
+  return getArticleKeywordLabels(article).map((tag) => tag.toLowerCase());
+}
+
+/**
+ * Case-insensitive phrase match against seo_title, meta_description, or slug.
+ */
 export function articleMatchesSearch(article, normalizedQuery) {
   if (!normalizedQuery) return true;
 
-  const title = (article?.seo_title || article?.source?.title || '').toLowerCase();
-  const description = (
-    article?.meta_description || articleExcerpt(article) || ''
-  ).toLowerCase();
-  const tags = getArticleTags(article);
+  const title = (article?.seo_title || '').toLowerCase();
+  const description = (article?.meta_description || '').toLowerCase();
+  const slug = (article?.slug || '').toLowerCase();
+  const slugPhrase = normalizedQuery.replace(/\s+/g, '-');
 
-  const words = normalizedQuery.split(/\s+/).filter(Boolean);
-  if (!words.length) return true;
-
-  return words.every(
-    (word) =>
-      title.includes(word) ||
-      description.includes(word) ||
-      tags.some((tag) => tag.includes(word))
+  return (
+    title.includes(normalizedQuery) ||
+    description.includes(normalizedQuery) ||
+    slug.includes(normalizedQuery) ||
+    slug.includes(slugPhrase)
   );
 }
 

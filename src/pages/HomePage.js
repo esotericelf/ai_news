@@ -5,6 +5,7 @@ import Pagination from '../components/ui/Pagination';
 import SectionHeader from '../components/ui/SectionHeader';
 import ArticleHero from '../features/articles/ArticleHero';
 import ArticleList from '../features/articles/ArticleList';
+import SearchResultsView from '../features/search/SearchResultsView';
 import TrendingTags from '../features/trending/TrendingTags';
 import useClientSearchFeed from '../hooks/useClientSearchFeed';
 import useUrlSearch from '../hooks/useUrlSearch';
@@ -52,7 +53,13 @@ export default function HomePage() {
   const feedArticles = hasSearch ? searchable : ready;
   const searchLoading = hasSearch && listStatus !== 'succeeded' && listStatus !== 'failed';
 
-  const { visible, isClientSearch, isEmpty, isSearchLoading, pagination } = useClientSearchFeed({
+  const {
+    visible,
+    filtered,
+    isEmpty,
+    isSearchLoading,
+    pagination,
+  } = useClientSearchFeed({
     articles: feedArticles,
     searchQuery: query,
     page,
@@ -81,17 +88,11 @@ export default function HomePage() {
       />
       <JsonLd data={buildWebsiteJsonLd()} />
 
-      <div className="page page--home">
+      <div className={`page page--home${hasSearch ? ' page--home-search' : ''}`}>
         {!hasSearch && page === 1 && (
           <header className="page-masthead">
             <h1 className="page-masthead__title">The Latest in AI &amp; Technology</h1>
             <p className="page-masthead__dek">{config.siteDescription}</p>
-          </header>
-        )}
-
-        {hasSearch && (
-          <header className="page-masthead page-masthead--compact">
-            <SectionHeader title={`Results for “${display}”`} />
           </header>
         )}
 
@@ -101,46 +102,61 @@ export default function HomePage() {
           </Link>
         </nav>
 
-        <TrendingTags />
-
-        {listStatus === 'failed' && (
-          <ErrorState
-            message={listError}
-            onRetry={() =>
-              dispatch(
-                hasSearch
-                  ? loadArticles({ page: 1, page_size: CLIENT_SEARCH_FETCH_SIZE })
-                  : loadArticles({ page })
-              )
-            }
-          />
-        )}
-
-        {listStatus !== 'failed' && (
+        {hasSearch ? (
           <>
-            {lead && (
-              <>
-                <SectionHeader title="Today's Picks" />
-                <ArticleHero article={lead} />
-              </>
-            )}
-            <ArticleList
-              articles={listArticles}
-              loading={listStatus === 'loading' || isSearchLoading}
-              leadArticle={lead}
-              emptyMessage={
-                isEmpty
-                  ? `No articles found matching “${display}”. Try a different keyword or browse topics.`
-                  : null
-              }
-            />
-            {(isClientSearch ? pagination.totalCount > 0 : pagination.hasNext || pagination.hasPrevious) && (
-              <Pagination
-                currentPage={pagination.currentPage}
-                hasNext={pagination.hasNext}
-                hasPrevious={pagination.hasPrevious}
-                totalCount={pagination.totalCount}
+            {listStatus === 'failed' && (
+              <ErrorState
+                message={listError}
+                onRetry={() =>
+                  dispatch(loadArticles({ page: 1, page_size: CLIENT_SEARCH_FETCH_SIZE }))
+                }
               />
+            )}
+            {listStatus !== 'failed' && (
+              <SearchResultsView
+                display={display}
+                visible={visible}
+                filtered={filtered}
+                feedArticles={feedArticles}
+                isEmpty={isEmpty}
+                isSearchLoading={listStatus === 'loading' || isSearchLoading}
+                pagination={pagination}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <TrendingTags />
+
+            {listStatus === 'failed' && (
+              <ErrorState
+                message={listError}
+                onRetry={() => dispatch(loadArticles({ page }))}
+              />
+            )}
+
+            {listStatus !== 'failed' && (
+              <>
+                {lead && (
+                  <>
+                    <SectionHeader title="Today's Picks" />
+                    <ArticleHero article={lead} />
+                  </>
+                )}
+                <ArticleList
+                  articles={listArticles}
+                  loading={listStatus === 'loading'}
+                  leadArticle={lead}
+                />
+                {(pagination.hasNext || pagination.hasPrevious) && (
+                  <Pagination
+                    currentPage={pagination.currentPage}
+                    hasNext={pagination.hasNext}
+                    hasPrevious={pagination.hasPrevious}
+                    totalCount={pagination.totalCount}
+                  />
+                )}
+              </>
             )}
           </>
         )}
