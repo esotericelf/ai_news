@@ -26,6 +26,8 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  PUBLIC_URL = "/"
+  CI = "true"
 
 # CSP here (not only in public/_headers) so deploys always pick up changes.
 # Firebase Auth loads https://apis.google.com/js/api.js — requires script-src-elem.
