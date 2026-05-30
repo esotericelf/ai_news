@@ -8,7 +8,7 @@ function searchUrl(label) {
   };
 }
 
-/** Searchable topic chips for the active article (sidebar on desktop, inline after body on mobile). */
+/** Relational Keyword Matrix — searchable topic chips (sticky sidebar desktop, footer on mobile). */
 export default function RelationalKeywordMatrix({ article }) {
   const keywords = getRelationalKeywordLabels(article);
 
