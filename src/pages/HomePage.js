@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import ErrorState from '../components/ui/ErrorState';
 import Pagination from '../components/ui/Pagination';
 import SectionHeader from '../components/ui/SectionHeader';
@@ -157,12 +157,6 @@ export default function HomePage() {
             <p className="page-masthead__dek">{config.siteDescription}</p>
           </header>
         )}
-
-        <nav className="home-topics-cta" aria-label="Topic navigation">
-          <Link to="/topics" className="home-topics-cta__link">
-            Browse topics by category →
-          </Link>
-        </nav>
 
         {hasSearch ? (
           <>

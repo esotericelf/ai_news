@@ -8,9 +8,10 @@ import AppLayout from './layout/AppLayout';
 import ArticlePage from './pages/ArticlePage';
 import CategoryPage from './pages/CategoryPage';
 import HomePage from './pages/HomePage';
-import NotFoundPage from './pages/NotFoundPage';
 import LegacyTagRedirect from './pages/LegacyTagRedirect';
+import MasterReportPage from './pages/MasterReportPage';
 import MatrixEntityPage from './pages/MatrixEntityPage';
+import NotFoundPage from './pages/NotFoundPage';
 import TopicsPage from './pages/TopicsPage';
 import EditorPage from './pages/EditorPage';
 import { store } from './store';
@@ -29,6 +30,7 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route index element={<HomePage />} />
               <Route path="topics" element={<TopicsPage />} />
+              <Route path="report" element={<MasterReportPage />} />
               <Route path="category/:l1" element={<CategoryPage />} />
               <Route path="category/:l1/:l2" element={<CategoryPage />} />
               <Route path="companies/:slug" element={<MatrixEntityPage matrixType="company" />} />

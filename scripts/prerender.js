@@ -65,7 +65,7 @@ function pickRoutesFromSitemap({ sitemapXml, limits }) {
   const paths = uniq(locs.map(toPathname).filter(Boolean));
 
   // Always include these entry points.
-  const always = ['/', '/topics'];
+  const always = ['/', '/topics', '/report'];
 
   const categories = paths.filter((p) => p === '/topics' || p.startsWith('/category/'));
   const matrix = paths.filter(
