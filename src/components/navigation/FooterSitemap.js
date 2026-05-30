@@ -1,56 +1,6 @@
 import { Link } from 'react-router-dom';
-import { FOOTER_SITEMAP_SECTIONS } from '../../config/footerSitemap';
-
-function searchTo(term) {
-  return {
-    pathname: '/',
-    search: `search=${encodeURIComponent(term)}`,
-  };
-}
-
-function SitemapLink({ item }) {
-  const className = 'footer-sitemap__link';
-
-  if (item.to) {
-    return (
-      <Link to={item.to} className={className}>
-        {item.label}
-      </Link>
-    );
-  }
-
-  if (item.search) {
-    return (
-      <Link to={searchTo(item.search)} className={className}>
-        {item.label}
-      </Link>
-    );
-  }
-
-  if (item.href) {
-    const external = item.href.startsWith('http');
-    return (
-      <a
-        href={item.href}
-        className={className}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      >
-        {item.label}
-      </a>
-    );
-  }
-
-  return <span className={className}>{item.label}</span>;
-}
-
-function SitemapBranch({ item }) {
-  return (
-    <li className="footer-sitemap__branch">
-      <SitemapLink item={item} />
-      {item.hint && <span className="footer-sitemap__hint">{item.hint}</span>}
-    </li>
-  );
-}
+import { FOOTER_SITEMAP_SECTIONS } from '../../config/siteDirectory';
+import { SitemapTreeBranch, SitemapTreeLink } from './SitemapTree';
 
 function SitemapSection({ section }) {
   return (
@@ -60,7 +10,10 @@ function SitemapSection({ section }) {
       </h3>
       <ul className="footer-sitemap__tree">
         {section.items.map((item) => (
-          <SitemapBranch key={`${section.id}-${item.label}`} item={item} />
+          <li key={`${section.id}-${item.label}`} className="footer-sitemap__branch">
+            <SitemapTreeLink item={item} className="footer-sitemap__link" />
+            {item.hint && <span className="footer-sitemap__hint">{item.hint}</span>}
+          </li>
         ))}
       </ul>
     </section>
@@ -71,7 +24,12 @@ function SitemapSection({ section }) {
 export default function FooterSitemap() {
   return (
     <nav className="footer-sitemap" aria-label="Site directory">
-      <p className="footer-sitemap__title">Site directory</p>
+      <p className="footer-sitemap__title">
+        Site directory —{' '}
+        <Link to="/sitemap" className="footer-sitemap__full-map">
+          full map
+        </Link>
+      </p>
       <div className="footer-sitemap__grid">
         {FOOTER_SITEMAP_SECTIONS.map((section) => (
           <SitemapSection key={section.id} section={section} />

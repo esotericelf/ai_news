@@ -12,6 +12,7 @@ import LegacyTagRedirect from './pages/LegacyTagRedirect';
 import MasterReportPage from './pages/MasterReportPage';
 import MatrixEntityPage from './pages/MatrixEntityPage';
 import NotFoundPage from './pages/NotFoundPage';
+import SitemapPage from './pages/SitemapPage';
 import TopicsPage from './pages/TopicsPage';
 import EditorPage from './pages/EditorPage';
 import { store } from './store';
@@ -31,6 +32,7 @@ export default function App() {
               <Route index element={<HomePage />} />
               <Route path="topics" element={<TopicsPage />} />
               <Route path="report" element={<MasterReportPage />} />
+              <Route path="sitemap" element={<SitemapPage />} />
               <Route path="category/:l1" element={<CategoryPage />} />
               <Route path="category/:l1/:l2" element={<CategoryPage />} />
               <Route path="companies/:slug" element={<MatrixEntityPage matrixType="company" />} />

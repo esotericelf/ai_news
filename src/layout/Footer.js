@@ -21,6 +21,7 @@ export default function Footer() {
           <Link to="/">Home</Link>
           <Link to="/report">Master Report</Link>
           <Link to="/topics">Topics</Link>
+          <Link to="/sitemap">Site Map</Link>
           <a href="/sitemap.xml">XML Sitemap</a>
         </nav>
       </div>
