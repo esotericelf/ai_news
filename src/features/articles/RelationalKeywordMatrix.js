@@ -16,7 +16,7 @@ export default function RelationalKeywordMatrix({ article }) {
     <aside className="keyword-matrix" aria-labelledby="related-topics-heading">
       <div className="keyword-matrix__panel">
         <h2 className="keyword-matrix__title" id="related-topics-heading">
-          Related Topics
+          Related topics
         </h2>
         <ul className="keyword-matrix__list">
           {keywords.map((label) => (

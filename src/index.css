@@ -1302,39 +1302,13 @@ h4 {
     grid-template-columns: minmax(0, 56rem) minmax(240px, 17.5rem);
     grid-template-areas:
       'content topics'
-      'tail topics';
+      'tail tail';
     align-items: start;
     gap: var(--space-lg);
   }
 
   .page--article .article-geo__shell {
     max-width: calc(56rem + 17.5rem + var(--space-lg));
-  }
-
-  .article-geo__topics {
-    position: sticky;
-    top: 5.5rem;
-    align-self: start;
-  }
-
-  .keyword-matrix__panel {
-    padding: var(--space-md);
-    background: var(--bg-subtle);
-    border: 1px solid var(--border);
-    border-radius: 0;
-  }
-
-  .keyword-matrix__title {
-    margin-bottom: var(--space-md);
-    font-size: 0.8125rem;
-    letter-spacing: 0.08em;
-    color: var(--text);
-  }
-
-  .keyword-matrix__chip {
-    min-height: 2rem;
-    padding: 0.35rem 0.85rem;
-    font-size: 0.8125rem;
   }
 }
 
