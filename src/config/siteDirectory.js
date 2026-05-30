@@ -64,22 +64,4 @@ export const FOOTER_SITEMAP_SECTIONS = [
     title: 'Top Tech Clusters',
     items: SITEMAP_PAGE_SECTIONS[1].items.slice(0, 4),
   },
-  {
-    id: 'resources',
-    title: 'Resources',
-    items: [
-      SITEMAP_PAGE_SECTIONS[2].items.find((item) => item.label === 'API Documentation'),
-      SITEMAP_PAGE_SECTIONS[0].items.find((item) => item.label === 'RSS Feed'),
-      SITEMAP_PAGE_SECTIONS[2].items.find((item) => item.label === 'System status'),
-      SITEMAP_PAGE_SECTIONS[2].items.find((item) => item.label === 'XML sitemap (crawlers)'),
-    ]
-      .filter(Boolean)
-      .map((item) =>
-        item.label === 'System status'
-          ? { ...item, label: 'System Status' }
-          : item.label === 'XML sitemap (crawlers)'
-            ? { ...item, label: 'XML Sitemap' }
-            : item
-      ),
-  },
 ];
