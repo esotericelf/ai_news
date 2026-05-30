@@ -6,6 +6,7 @@ import ErrorState from '../components/ui/ErrorState';
 import ArticleBody from '../features/articles/ArticleBody';
 import ArticleMatrixBadges from '../features/articles/ArticleMatrixBadges';
 import ArticleSeoMatrix from '../features/articles/ArticleSeoMatrix';
+import RelationalKeywordMatrix from '../features/articles/RelationalKeywordMatrix';
 import ArticleMeta from '../features/articles/ArticleMeta';
 import ArticlePartnerCta from '../features/articles/ArticlePartnerCta';
 import ArticleSharePopover from '../features/articles/ArticleSharePopover';
@@ -118,31 +119,39 @@ export default function ArticlePage() {
             />
           </figure>
 
-          <div className="article-geo__content">
-            <ArticleSeoMatrix article={article} />
-            <ArticleBody html={article.body_html} />
+          <div className="article-geo__layout">
+            <div className="article-geo__main">
+              <div className="article-geo__content">
+                <ArticleSeoMatrix article={article} />
+                <ArticleBody html={article.body_html} />
+              </div>
+
+              <ArticlePartnerCta article={article} />
+
+              <footer className="article-footer">
+                <p className="article-footer__attribution">
+                  Summary based on reporting from the original publisher.{' '}
+                  {article.canonical_url && (
+                    <a href={article.canonical_url} rel="noopener noreferrer" target="_blank">
+                      Read original article
+                    </a>
+                  )}
+                </p>
+              </footer>
+
+              <CommentsSection slug={article.slug} seoArticleId={article.id} />
+
+              <RelatedArticles
+                articles={list}
+                currentSlug={article.slug}
+                keywords={keywords}
+              />
+            </div>
+
+            <div className="article-geo__sidebar">
+              <RelationalKeywordMatrix article={article} />
+            </div>
           </div>
-
-          <ArticlePartnerCta article={article} />
-
-          <footer className="article-footer">
-            <p className="article-footer__attribution">
-              Summary based on reporting from the original publisher.{' '}
-              {article.canonical_url && (
-                <a href={article.canonical_url} rel="noopener noreferrer" target="_blank">
-                  Read original article
-                </a>
-              )}
-            </p>
-          </footer>
-
-          <CommentsSection slug={article.slug} seoArticleId={article.id} />
-
-          <RelatedArticles
-            articles={list}
-            currentSlug={article.slug}
-            keywords={keywords}
-          />
         </div>
       </article>
     </>

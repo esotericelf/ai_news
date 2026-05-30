@@ -18,6 +18,14 @@ const THEME_KEYWORD_POOLS = [
 
 const DEFAULT_STORY_TAGS = ['LLMs', 'machine learning', 'artificial intelligence', 'technology news'];
 
+/** Baseline chips shown when an article has no individual tags or keywords. */
+export const BASELINE_RELATIONAL_KEYWORDS = [
+  'AI Innovation',
+  'Tech Trends',
+  'Machine Learning',
+  'Industry News',
+];
+
 function humanizeCategorySlug(value) {
   return String(value).replace(/-/g, ' ').trim();
 }
@@ -121,6 +129,24 @@ export function parseSearchDisplay(raw) {
 export function getArticleKeywordLabels(article) {
   const enriched = enrichArticleKeywords(article);
   return collectExplicitKeywordLabels(enriched);
+}
+
+/**
+ * Keyword chips for the relational keyword matrix sidebar.
+ * Prefers `keywords` / `tags`; falls back to baseline labels so the widget never renders empty.
+ */
+export function getRelationalKeywordLabels(article, { limit = 12 } = {}) {
+  const enriched = enrichArticleKeywords(article);
+  const primary = [
+    ...(Array.isArray(enriched.keywords) ? enriched.keywords : []),
+    ...(Array.isArray(enriched.tags) ? enriched.tags : []),
+  ]
+    .map((tag) => String(tag).trim())
+    .filter(Boolean);
+
+  const unique = [...new Set(primary)];
+  const labels = unique.length ? unique : [...BASELINE_RELATIONAL_KEYWORDS];
+  return labels.slice(0, limit);
 }
 
 /** Tags/keywords attached to an article for client-side search (lowercase). */
