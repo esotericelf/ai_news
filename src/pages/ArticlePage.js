@@ -17,7 +17,7 @@ import SeoHead from '../seo/SeoHead';
 import { absoluteArticleUrl, config } from '../config';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticleBySlug, loadArticles } from '../store/slices/articlesSlice';
-import { buildArticleJsonLd, buildBreadcrumbJsonLd } from '../utils/seo';
+import { buildArticleJsonLd, buildArticleBreadcrumbJsonLd } from '../utils/seo';
 import { articleCategory, resolveArticleImageUrl } from '../utils/article';
 import { seoMatrixLabels } from '../utils/seoMatrix';
 
@@ -73,13 +73,7 @@ export default function ArticlePage() {
   ];
   const imageUrl = resolveArticleImageUrl(article);
 
-  const jsonLd = [
-    buildArticleJsonLd(article),
-    buildBreadcrumbJsonLd([
-      { name: 'Home', url: config.siteUrl },
-      { name: title, url: canonical },
-    ]),
-  ];
+  const jsonLd = [buildArticleJsonLd(article), buildArticleBreadcrumbJsonLd(article)];
 
   return (
     <>

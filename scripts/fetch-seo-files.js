@@ -40,8 +40,9 @@ loadEnvFile('.env');
 loadEnvFile('.env.local');
 loadEnvFile('.env.production');
 
-const apiBase = (process.env.REACT_APP_API_BASE_URL || process.env.API_BASE_URL || '')
-  .replace(/\/$/, '');
+const { resolveApiUrl } = require('./lib/resolveApiUrl');
+
+const apiBase = resolveApiUrl();
 const siteUrl = (
   process.env.REACT_APP_SITE_URL || 'https://ainewsrepo.netlify.app'
 ).replace(/\/$/, '');
@@ -72,11 +73,11 @@ function isHtml(body) {
 
 async function fetchPath(apiPath, accept) {
   const headers = { Accept: accept };
-  if (/ngrok/i.test(apiBase)) {
-    headers['ngrok-skip-browser-warning'] = 'true';
-  }
   if (apiKey) {
     headers['X-Api-Key'] = apiKey;
+    headers['ngrok-skip-browser-warning'] = 'true';
+  } else if (/ngrok/i.test(apiBase)) {
+    headers['ngrok-skip-browser-warning'] = 'true';
   }
   const res = await fetch(`${apiBase}${apiPath}`, { headers });
   const body = await res.text();
@@ -87,8 +88,8 @@ async function writeSeoFile(apiPath, filename, validate, fallback) {
   const outPath = path.join(publicDir, filename);
   if (!apiBase) {
     console.warn(
-      `[fetch-seo-files] No REACT_APP_API_BASE_URL — writing fallback ${filename}. ` +
-        'Set REACT_APP_API_BASE_URL on Netlify so prebuild can pull the Django sitemap.'
+      `[fetch-seo-files] No REACT_APP_API_URL — writing fallback ${filename}. ` +
+        'Set REACT_APP_API_URL on Netlify so prebuild can pull the Django sitemap.'
     );
     fs.writeFileSync(outPath, fallback, 'utf8');
     return false;
@@ -120,8 +121,13 @@ function writeNetlifyRedirects() {
   const onNetlify =
     process.env.NETLIFY === 'true' || /\.netlify\.app$/i.test(siteUrl);
   const runtimeApi =
-    (process.env.API_BASE_URL || process.env.REACT_APP_API_BASE_URL || apiBase || '')
-      .replace(/\/$/, '');
+    (
+      process.env.API_BASE_URL ||
+      process.env.REACT_APP_API_URL ||
+      process.env.REACT_APP_API_BASE_URL ||
+      apiBase ||
+      ''
+    ).replace(/\/$/, '');
 
   const lines = [];
 

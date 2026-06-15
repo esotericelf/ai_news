@@ -20,7 +20,9 @@ export function applyApiKeyHeader(headers = {}, requestUrl = '') {
   if (config.apiKey) {
     next['X-Api-Key'] = config.apiKey;
   }
-  if (/ngrok/i.test(requestUrl)) {
+  if (next['X-Api-Key'] || next['x-api-key']) {
+    next['ngrok-skip-browser-warning'] = 'true';
+  } else if (/ngrok/i.test(requestUrl)) {
     next['ngrok-skip-browser-warning'] = 'true';
   }
   return next;
@@ -60,9 +62,9 @@ export async function apiRequest(path, options = {}) {
     const hint =
       `Cannot reach the API at ${url}. ` +
       (getApiBase()
-        ? 'Check REACT_APP_API_BASE_URL / ngrok is running and CORS allows this site.'
+        ? 'Check REACT_APP_API_URL / ngrok is running and CORS allows this site.'
         : 'On Netlify, set API_BASE_URL (function env) to your Django/ngrok origin and redeploy. ' +
-          'Unset REACT_APP_API_BASE_URL so the app uses /api via the proxy.') +
+          'Unset REACT_APP_API_URL so the app uses /api via the proxy.') +
       ` Backend target: ${target}.`;
     throw new Error(err?.message === 'Failed to fetch' ? hint : err.message);
   }

@@ -1,5 +1,5 @@
 import { config, getApiBase } from '../config';
-import { buildApiUrl } from './http';
+import { applyApiKeyHeader, buildApiUrl } from './http';
 
 function cacheUrlForApiPath(path, params) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -59,14 +59,8 @@ export async function apiGet(path, params = {}) {
     }
   });
 
-  const headers = { Accept: 'application/json' };
-  if (config.apiKey) {
-    headers['X-Api-Key'] = config.apiKey;
-  }
   const requestUrl = requestUrlObj.toString();
-  if (/ngrok/i.test(requestUrl)) {
-    headers['ngrok-skip-browser-warning'] = 'true';
-  }
+  const headers = applyApiKeyHeader({ Accept: 'application/json' }, requestUrl);
 
   let res;
   try {
@@ -80,7 +74,7 @@ export async function apiGet(path, params = {}) {
         ? `Dev proxy targets ${apiTarget}. `
         : `Requests go to ${apiTarget}. `) +
       'For local Docker: run docker compose up in AI_News_Scraper and check http://localhost:8000/health/. ' +
-      'For ngrok: set REACT_APP_API_BASE_URL in .env.local to your active https://….ngrok-free.app or .ngrok-free.dev URL, ' +
+      'For ngrok: set REACT_APP_API_URL in .env.local to your active https://….ngrok-free.app or .ngrok-free.dev URL, ' +
       'set REACT_APP_USE_DEV_PROXY=false (or keep true to proxy through npm), restart npm start. ' +
       'REACT_APP_API_KEY must match backend API_KEY. See AI_News_Scraper/docs/NGROK.md.';
     throw new Error(err.message === 'Failed to fetch' ? hint : err.message);

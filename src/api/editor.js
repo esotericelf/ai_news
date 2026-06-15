@@ -39,6 +39,7 @@ async function editorHeaders() {
     '';
   if (key) {
     headers['X-Api-Key'] = key;
+    headers['ngrok-skip-browser-warning'] = 'true';
   }
   return headers;
 }

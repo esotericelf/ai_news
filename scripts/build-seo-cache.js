@@ -79,10 +79,10 @@ function uniq(arr) {
   return [...new Set(arr)];
 }
 
+const { resolveApiUrl, apiAuthHeaders } = require('./lib/resolveApiUrl');
+
 async function apiGetJson(apiBase, apiPath, apiKey) {
-  const headers = { Accept: 'application/json' };
-  if (apiKey) headers['X-Api-Key'] = apiKey;
-  if (/ngrok/i.test(apiBase)) headers['ngrok-skip-browser-warning'] = 'true';
+  const headers = apiAuthHeaders(apiKey, apiBase);
   const res = await fetch(`${apiBase}${apiPath}`, { headers });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
@@ -120,10 +120,7 @@ async function main() {
   loadEnvFile('.env.local');
   loadEnvFile('.env.production');
 
-  const apiBase = (process.env.REACT_APP_API_BASE_URL || process.env.API_BASE_URL || '').replace(
-    /\/$/,
-    ''
-  );
+  const apiBase = resolveApiUrl();
   const apiKey = (process.env.REACT_APP_API_KEY || process.env.API_KEY || '').trim();
 
   if (!apiBase) {

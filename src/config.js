@@ -3,9 +3,18 @@ const useDevProxy =
   process.env.NODE_ENV === 'development' &&
   process.env.REACT_APP_USE_DEV_PROXY !== 'false';
 
-const rawApiBase = (process.env.REACT_APP_API_BASE_URL || '').replace(/\/$/, '');
+/** Canonical API origin for fetch requests (no trailing slash). */
+export function getConfiguredApiUrl() {
+  return (
+    process.env.REACT_APP_API_URL ||
+    process.env.REACT_APP_API_BASE_URL ||
+    ''
+  ).replace(/\/$/, '');
+}
 
-/** Same-origin /api proxy (Netlify function). Avoids CORS when REACT_APP_API_BASE_URL points at ngrok. */
+const rawApiBase = getConfiguredApiUrl();
+
+/** Same-origin /api proxy (Netlify function). Avoids CORS when REACT_APP_API_URL points at ngrok. */
 export function getApiBase() {
   if (useDevProxy) return '';
   if (process.env.REACT_APP_USE_SAME_ORIGIN_API === '1') return '';
@@ -25,7 +34,7 @@ const siteUrl = (process.env.REACT_APP_SITE_URL || 'http://localhost:3000').repl
 );
 
 const devProxyTarget = (
-  process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'
+  getConfiguredApiUrl() || 'http://localhost:8000'
 ).replace(/\/$/, '');
 
 export const config = {
@@ -73,6 +82,12 @@ export const MATRIX_FILTER_PARAMS = {
   tool: 'tool',
   industry: 'industry',
 };
+
+export function clusterSearchUrl(searchTerm) {
+  const term = String(searchTerm || '').trim();
+  if (!term) return config.siteUrl;
+  return `${config.siteUrl}/?search=${encodeURIComponent(term)}`;
+}
 
 export function matrixUrl(matrixType, slug) {
   const segment = MATRIX_SEGMENTS[matrixType];

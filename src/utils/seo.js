@@ -1,11 +1,70 @@
-import { absoluteArticleUrl, config } from '../config';
+import { absoluteArticleUrl, clusterSearchUrl, config } from '../config';
+import { SITEMAP_PAGE_SECTIONS } from '../config/siteDirectory';
 import { resolveArticleImageUrl } from './image';
+import { getRelationalKeywordLabels } from './search';
 import {
   normalizeEntities,
   normalizeKeyMetrics,
   normalizeThreeSentenceSummary,
   seoMatrixLabels,
 } from './seoMatrix';
+
+const CLUSTER_BREADCRUMB_ITEMS =
+  SITEMAP_PAGE_SECTIONS.find((section) => section.id === 'clusters')?.items ?? [];
+
+/** Position 2 when no exploration cluster matches the article. */
+const DEFAULT_ARTICLE_BREADCRUMB_TIER = {
+  name: 'Tech News',
+  url: clusterSearchUrl('all'),
+};
+
+function normalizeBreadcrumbToken(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Map an article to its primary exploration cluster for structured breadcrumbs. */
+export function resolveArticleClusterBreadcrumb(article) {
+  const keywordLabels = getRelationalKeywordLabels(article);
+  const keywordTokens = new Set(keywordLabels.map(normalizeBreadcrumbToken));
+  const corpus = [
+    ...keywordLabels,
+    article?.seo_title,
+    article?.meta_description,
+    article?.content_category_l1,
+    article?.content_category_l2,
+    article?.source?.content_category_l1,
+    article?.source?.content_category_l2,
+    ...(article?.target_keywords || []),
+  ]
+    .filter(Boolean)
+    .map(normalizeBreadcrumbToken)
+    .join(' ');
+
+  for (const cluster of CLUSTER_BREADCRUMB_ITEMS) {
+    const searchTerm = String(cluster.search || '').trim();
+    const labelTerm = String(cluster.label || '').trim();
+    const searchToken = normalizeBreadcrumbToken(searchTerm);
+    const labelToken = normalizeBreadcrumbToken(labelTerm);
+    const matchesCluster =
+      keywordTokens.has(searchToken) ||
+      keywordTokens.has(labelToken) ||
+      (searchToken && corpus.includes(searchToken)) ||
+      (labelToken && corpus.includes(labelToken));
+
+    if (matchesCluster && searchTerm) {
+      return {
+        name: labelTerm || searchTerm,
+        url: clusterSearchUrl(searchTerm),
+      };
+    }
+  }
+
+  return null;
+}
 
 function buildArticleMentions(article) {
   const companies = normalizeEntities(article?.companies).map((c) => ({
@@ -99,14 +158,37 @@ export function buildWebsiteJsonLd() {
 }
 
 export function buildBreadcrumbJsonLd(items) {
+  const crumbs = (items || []).filter((item) => item?.name);
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map((item, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: item.name,
-      item: item.url,
-    })),
+    itemListElement: crumbs.map((item, index) => {
+      const listItem = {
+        '@type': 'ListItem',
+        position: index + 1,
+        name: item.name,
+      };
+      if (item.url) {
+        listItem.item = item.url;
+      }
+      return listItem;
+    }),
   };
+}
+
+/** Article route: Home → cluster search archive → current headline (always 3 tiers). */
+export function buildArticleBreadcrumbJsonLd(article) {
+  const title = article?.seo_title || article?.source?.title || 'Untitled';
+  const canonical = absoluteArticleUrl(article.slug);
+  const cluster = resolveArticleClusterBreadcrumb(article);
+  const tier2 =
+    cluster?.name?.trim() && cluster?.url
+      ? cluster
+      : DEFAULT_ARTICLE_BREADCRUMB_TIER;
+
+  return buildBreadcrumbJsonLd([
+    { name: 'Home', url: config.siteUrl },
+    tier2,
+    { name: title, url: canonical },
+  ]);
 }

@@ -36,7 +36,7 @@ ngrok http 8000
 ```
 
 ```env
-REACT_APP_API_BASE_URL=https://YOUR-SUBDOMAIN.ngrok-free.dev
+REACT_APP_API_URL=https://YOUR-SUBDOMAIN.ngrok-free.dev
 REACT_APP_API_KEY=<same as AI_News_Scraper API_KEY>
 REACT_APP_SITE_URL=http://localhost:3000
 REACT_APP_USE_DEV_PROXY=false
@@ -44,7 +44,7 @@ REACT_APP_USE_DEV_PROXY=false
 
 The browser calls ngrok directly; Django must allow `http://localhost:3000` in `CORS_ALLOWED_ORIGINS`.
 
-**Alternative (no ngrok):** `REACT_APP_API_BASE_URL=http://localhost:8000` and `REACT_APP_USE_DEV_PROXY=true` — then the dev server proxies `/api`, `/health`, `/robots.txt`, `/sitemap.xml`.
+**Alternative (no ngrok):** `REACT_APP_API_URL=http://localhost:8000` and `REACT_APP_USE_DEV_PROXY=true` — then the dev server proxies `/api`, `/health`, `/robots.txt`, `/sitemap.xml`.
 
 Add `REACT_APP_FIREBASE_*` for Google/GitHub editor sign-in (see below).
 
@@ -61,7 +61,7 @@ Generated `public/sitemap.xml`, `public/robots.txt`, and `public/_redirects` are
 
 **Where the sitemap really lives:** Django (`AI_News_Scraper`) builds it dynamically from Postgres at `/sitemap.xml`. This React app does **not** generate URLs itself — `prebuild` snapshots that XML into `public/` and writes Netlify proxy rules so production can stay fresh without redeploying after every scrape.
 
-**If you only see the homepage in `public/sitemap.xml`:** the build could not reach the API (missing `REACT_APP_API_BASE_URL`, ngrok down, or API offline). Fix the env var, ensure Django is up, then run `npm run fetch-seo-files` or redeploy.
+**If you only see the homepage in `public/sitemap.xml`:** the build could not reach the API (missing `REACT_APP_API_URL`, ngrok down, or API offline). Fix the env var, ensure Django is up, then run `npm run fetch-seo-files` or redeploy.
 
 ## Deploy to Netlify
 
@@ -75,7 +75,8 @@ Netlify cannot reach `localhost:8000`. Use a **public HTTPS** API URL for produc
 
    | Name | Value |
    |------|--------|
-   | `REACT_APP_API_BASE_URL` | Public API URL (no trailing slash) |
+   | `REACT_APP_API_URL` | Public API URL for build-time SEO fetch (no trailing slash). Leave unset in Netlify UI for runtime `/api` proxy. |
+   | `API_BASE_URL` | Netlify **site** env: ngrok/hosted Django origin for `netlify/functions/proxy.js` |
    | `REACT_APP_SITE_URL` | `https://your-site.netlify.app` or custom domain |
    | `REACT_APP_API_KEY` | Same as Django `API_KEY` if required |
    | `REACT_APP_GA_MEASUREMENT_ID` | Google Analytics ID (optional) |
@@ -88,7 +89,7 @@ Netlify cannot reach `localhost:8000`. Use a **public HTTPS** API URL for produc
 
 Do **not** set `REACT_APP_USE_DEV_PROXY` on Netlify.
 
-**Sitemap:** `prebuild` pulls `/sitemap.xml` and `/robots.txt` from Django. If the API is unreachable, a **1-URL fallback** is written (homepage only). Set `REACT_APP_API_BASE_URL` to a **stable public HTTPS API** (not localhost). After deploy, `public/_redirects` proxies `/sitemap.xml` and `/robots.txt` to that API so crawlers always get the live Postgres-backed list. Redeploy whenever you change the API URL.
+**Sitemap:** `prebuild` pulls `/sitemap.xml` and `/robots.txt` from Django. If the API is unreachable, a **1-URL fallback** is written (homepage only). Set `REACT_APP_API_URL` (build) and `API_BASE_URL` (Netlify runtime proxy) to your **stable public HTTPS API** (not localhost). Redeploy whenever you change the API URL.
 
 **Google Search Console:** Use **URL prefix** verification (`https://your-site.netlify.app`) with **HTML tag** or the file `public/googleNKJh_qORZg2X3hGb4oCIfiEmgH93H4f2ovlcDp2V0AQ.html`. Domain DNS TXT does not work on `*.netlify.app`.
 
@@ -102,7 +103,8 @@ Workflow: `.github/workflows/deploy-netlify.yml` (runs on push to `main` / `mast
 |--------|---------|
 | `NETLIFY_AUTH_TOKEN` | Netlify personal access token |
 | `NETLIFY_SITE_ID` | Site ID from Netlify |
-| `REACT_APP_API_BASE_URL` | Public API |
+| `REACT_APP_API_URL` | Build-time API (optional on Netlify if using proxy only) |
+| `API_BASE_URL` | Netlify runtime proxy target (ngrok) |
 | `REACT_APP_SITE_URL` | Production site URL |
 | `REACT_APP_API_KEY` | Optional |
 | `REACT_APP_GA_MEASUREMENT_ID` | Optional |

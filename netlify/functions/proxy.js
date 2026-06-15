@@ -9,12 +9,16 @@
  *   /sitemap.xml-> /.netlify/functions/proxy/sitemap.xml
  *
  * Env:
- *   API_BASE_URL (preferred) or REACT_APP_API_BASE_URL
+ *   API_BASE_URL (preferred), REACT_APP_API_URL, or REACT_APP_API_BASE_URL (legacy)
  */
 
 function baseUrl() {
-  const raw =
-    (process.env.API_BASE_URL || process.env.REACT_APP_API_BASE_URL || '').trim();
+  const raw = (
+    process.env.API_BASE_URL ||
+    process.env.REACT_APP_API_URL ||
+    process.env.REACT_APP_API_BASE_URL ||
+    ''
+  ).trim();
   return raw.replace(/\/$/, '');
 }
 
@@ -63,18 +67,16 @@ exports.handler = async function handler(event) {
 
   const incoming = stripHopByHopHeaders(event.headers);
 
-  // Always send ngrok bypass header when proxying to ngrok.
-  if (/ngrok/i.test(b)) {
+  // Bypass ngrok interstitial when API key is used or target is ngrok.
+  if (incoming['X-Api-Key'] || incoming['x-api-key'] || /ngrok/i.test(b)) {
     incoming['ngrok-skip-browser-warning'] = 'true';
   }
 
-  // If you secure your backend with API_KEY, clients may send X-Api-Key.
-  // We pass through whatever the browser sent, and also allow setting one
-  // server-side (optional) for bots/crawlers.
   if (!incoming['X-Api-Key'] && !incoming['x-api-key']) {
     const serverKey = (process.env.API_KEY || process.env.REACT_APP_API_KEY || '').trim();
     if (serverKey) {
       incoming['X-Api-Key'] = serverKey;
+      incoming['ngrok-skip-browser-warning'] = 'true';
     }
   }
 

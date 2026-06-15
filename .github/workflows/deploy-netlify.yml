@@ -28,6 +28,7 @@ jobs:
       - name: Build
         env:
           # Must be a public HTTPS URL (not Docker Desktop localhost)
+          REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
           REACT_APP_API_BASE_URL: ${{ secrets.REACT_APP_API_BASE_URL }}
           REACT_APP_SITE_URL: ${{ secrets.REACT_APP_SITE_URL }}
           REACT_APP_API_KEY: ${{ secrets.REACT_APP_API_KEY }}
