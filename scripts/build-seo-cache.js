@@ -28,26 +28,6 @@ function readFileIfExists(p) {
   }
 }
 
-function loadEnvFile(filename) {
-  const filePath = path.join(rootDir, filename);
-  if (!fs.existsSync(filePath)) return;
-  for (const line of fs.readFileSync(filePath, 'utf8').split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    let value = trimmed.slice(eq + 1).trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-    if (process.env[key] === undefined) process.env[key] = value;
-  }
-}
-
 function intEnv(name, fallback) {
   const raw = (process.env[name] || '').trim();
   if (!raw) return fallback;
@@ -79,7 +59,7 @@ function uniq(arr) {
   return [...new Set(arr)];
 }
 
-const { resolveApiUrl, apiAuthHeaders } = require('./lib/resolveApiUrl');
+const { resolveApiUrl, apiAuthHeaders, loadEnvFile } = require('./lib/resolveApiUrl');
 
 async function apiGetJson(apiBase, apiPath, apiKey) {
   const headers = apiAuthHeaders(apiKey, apiBase);
@@ -116,9 +96,9 @@ function cachePathForApi(apiPath) {
 }
 
 async function main() {
-  loadEnvFile('.env');
-  loadEnvFile('.env.local');
-  loadEnvFile('.env.production');
+  loadEnvFile(rootDir, '.env');
+  loadEnvFile(rootDir, '.env.local');
+  loadEnvFile(rootDir, '.env.production');
 
   const apiBase = resolveApiUrl();
   const apiKey = (process.env.REACT_APP_API_KEY || process.env.API_KEY || '').trim();

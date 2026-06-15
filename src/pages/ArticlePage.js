@@ -14,7 +14,7 @@ import CommentsSection from '../features/comments/CommentsSection';
 import RelatedArticles from '../features/articles/RelatedArticles';
 import JsonLd from '../seo/JsonLd';
 import SeoHead from '../seo/SeoHead';
-import { absoluteArticleUrl, config } from '../config';
+import { absoluteArticleUrl } from '../config';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loadArticleBySlug, loadArticles } from '../store/slices/articlesSlice';
 import { buildArticleJsonLd, buildArticleBreadcrumbJsonLd } from '../utils/seo';

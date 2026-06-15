@@ -4,12 +4,18 @@ const useDevProxy =
   process.env.REACT_APP_USE_DEV_PROXY !== 'false';
 
 /** Canonical API origin for fetch requests (no trailing slash). */
+function isPlaceholderApiUrl(url) {
+  if (!url) return true;
+  return /YOUR-SUBDOMAIN|your-subdomain|example\.com/i.test(url);
+}
+
 export function getConfiguredApiUrl() {
-  return (
+  const raw =
     process.env.REACT_APP_API_URL ||
     process.env.REACT_APP_API_BASE_URL ||
-    ''
-  ).replace(/\/$/, '');
+    '';
+  const url = raw.replace(/\/$/, '');
+  return isPlaceholderApiUrl(url) ? '' : url;
 }
 
 const rawApiBase = getConfiguredApiUrl();
